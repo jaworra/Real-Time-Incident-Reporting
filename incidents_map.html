@@ -1,0 +1,180 @@
+<html>
+  <head>
+    <title>Live Road Incidents in QLD</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <script src="https://unpkg.com/deck.gl@^6.2.0/deckgl.min.js"></script>
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <!-- React load js -->
+    <script src= "https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <!-- Load React DOM-->
+    <script src= "https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <!-- Load Babel Compiler -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <style type="text/css">
+      body { font-family: Helvetica, Arial, sans-serif; width: 100vw; height: 100vh; margin: 0; }
+	    #TMR-panel { position: absolute; color: white; top: 10px; left: 0; margin: 0; font-size: 10px; line-height: 1.5; z-index: 1;}
+      #TIME-clock { position: absolute; color: white; top: 0px; right: 10; margin: 0; font-size: 10px; line-height: 1.5; z-index: 1;}
+	    #tooltip { font-family: Helvetica, Arial, sans-serif; position: absolute; padding: 4px; margin: 8px; background: rgba(0, 0, 0, 0.8);color: #fff;max-width: 300px;font-size: 10px; z-index: 9;pointer-events: none;}
+      #control-panel { position: absolute; background: #fff; bottom: 0; left: 0; margin: 12px; padding: 10px; font-size: 12px; line-height: 1.5; z-index: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+    <div id="tooltip"></div>
+  	<div id="TIME-clock">	</div>
+    <div id="control-panel">
+      <div>
+    <text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: bold; text-anchor:left; font-size: 15px; font-family: Arial, Helvetica, sans-serif;">Current Incidents</text>
+  </div>
+    <text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: normal; text-anchor:left; font-size: 10px; font-family: Arial, Helvetica, sans-serif;">Sourced from streams gateway, rolling 24hour</text>
+     <br></br>
+  </div></div>
+
+  <script type="text/babel">
+
+  function tick() {
+      const element = (<h1>{new Date().toLocaleTimeString()}</h1>);
+      ReactDOM.render(element, document.getElementById('TIME-clock'));
+  }
+  setInterval(tick, 1000);
+
+  //function here to check that
+  function addData() {
+      const element = (<b>{'Current Incidents'}</b>);
+      ReactDOM.render(element, document.getElementById('control-panel'));
+  }
+  addData();
+
+  </script>
+
+
+  <script type="text/javascript">
+
+// Look int
+	mapboxgl.accessToken = 'pk.eyJ1IjoiamF3b3JyYSIsImEiOiJjanh6ZXBoZjQwMjlvM25wamN3eWw4aHowIn0.sfurxwTqAA9OqJr72WXjAg';
+
+    const {MapboxLayer, HexagonLayer} = deck;
+    const map = new mapboxgl.Map({
+      container: document.body,
+      style: 'mapbox://styles/mapbox/dark-v9',
+      center: [153.0177, -27.4],
+      zoom: 8.6, // should set the zoom extents based on the inputu coordinates.
+    });
+
+    //const DATA_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/liveIncidents.csv';
+    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidents.csv';  //live
+    const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
+    const COLOR_RANGE = [
+      [1, 152, 189],
+      [73, 227, 206],
+      [216, 254, 181],
+      [254, 237, 177],
+      [254, 173, 84],
+      [209, 55, 78]
+    ];
+    const LIGHT_SETTINGS = {
+      lightsPosition: [-0.144528, 49.739968, 8000, -3.807751, 54.104682, 8000],
+      ambientRatio: 0.4,
+      diffuseRatio: 0.6,
+      specularRatio: 0.2,
+      lightsStrength: [0.8, 0.0, 0.8, 0.0],
+      numberOfLights: 2
+    };
+
+
+	<!-- Coverage = Hexagon radius multiplier, clamped between 0 - 1. The final radius of hexagon is calculated by coverage * radius. Note: coverage does not affect how points are binned. The radius of the bin is determined only by the radius property.-->
+	<!-- UpperPercentile = Filter bins and re-calculate color by upperPercentile. Hexagons with color value larger than the upperPercentile will be idden.-->
+
+//Load base map - In progress data *priority
+const myDeckLayer_inProgress = new MapboxLayer({
+    id: 'my-scatterplot',
+    type: ScatterplotLayer,
+    //data: d3.csv(DATA_URL),
+    data: d3.csv(DATA_URL, function(d) {if( d["status"] == "In Progress") { return d; }}),
+    //data: d3.json(DATA_URL2),
+    //getPosition: d => [d.coordinates[0],d.coordinates[1]],
+    opacity: 0.6,
+    radiusScale: 10,
+    radiusMinPixels: 5,
+    radiusMaxPixels: 50,
+    autoHighlight: true,
+    highlightColor: [255,255,0,250],
+    pickable: true,
+    onHover: onHoverProgressd,
+    //onHover: ({object, x, y}) => {const tooltip = `${object.lng}\n${object.status}`;},
+    //onHover: ({object, x, y}) => {const tooltip =`${object.points.length} incident reports`;},
+    getPosition: d => [Number(d.lng), Number(d.lat)],
+    getColor: d => [255, 0, 0]
+});
+
+
+  const myDeckLayer_Compeleted = new MapboxLayer({
+      id: 'newscatterplot',
+      type: ScatterplotLayer,
+      data: d3.csv(DATA_URL, function(d) {if( d["status"] == "Completed") { return d; }}),
+      opacity: 0.2,
+      radiusScale: 10,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 50,
+      autoHighlight: true,
+      highlightColor: [255,255,0,250],
+      pickable: true,
+      onHover: onHover,
+      getPosition: d => [Number(d.lng), Number(d.lat)],
+      getColor: d => [255,255,255]
+  });
+
+  	map.on('load', () => {
+    map.addLayer(myDeckLayer_inProgress);
+  	//map.addLayer(myDeckLayer_Compeleted);
+  	});
+
+//        OPTIONS.forEach(key => {
+//          document.getElementById(key).oninput = (evt) => {
+//            const value = Number(evt.target.value);
+//            document.getElementById(key + '-value').innerHTML = value;
+//            if (hexagonLayer) {
+//              hexagonLayer.setProps({[key]: value});
+//            }
+//          };
+//        });
+
+    	//apply_dateselector();
+      //{object.classification}${"<br />"}${object.loggedTime}${"<br />"}
+    	function onHover (info) {
+    	  const {x, y, object} = info;
+    	  if (object) {
+    		tooltip.style.left = `${x}px`;
+    		tooltip.style.top = `${y}px`;
+    		tooltip.innerHTML = `${object.status}: ${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
+    	  } else {
+    		tooltip.innerHTML = '';
+    	  }
+    	}
+
+    	function onHoverProgressd (info) {
+    	  const {x, y, object} = info;
+    	  if (object) {
+    		tooltip.style.left = `${x}px`;
+    		tooltip.style.top = `${y}px`;
+    		tooltip.innerHTML = `${object.status}:${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
+    	  } else {
+    		tooltip.innerHTML = '';
+    	  }
+    	}
+
+      // This refresh every x seconds or x mins  - Need to change this react - rending
+      const sec_5 = 5000
+      const sec_30 = 30000
+      const min_1 = 60000
+      setTimeout(function(){
+        window.location.reload(1);
+      }, min_1);
+
+      </script>
+    </body>
+</html>

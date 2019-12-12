@@ -1,0 +1,207 @@
+<html>
+  <head>
+    <title>Road Crashes in QLD</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <script src="https://unpkg.com/deck.gl@^6.2.0/deckgl.min.js"></script>
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <style type="text/css">
+      body { font-family: Helvetica, Arial, sans-serif; width: 100vw; height: 100vh; margin: 0; }
+      #control-panel { position: absolute; background: #fff; bottom: 0; left: 0; margin: 12px; padding: 20px; font-size: 12px; line-height: 1.5; z-index: 1; }
+	    #TMR-panel { position: absolute; color: white; top: 10px; left: 0; margin: 0; font-size: 8px; line-height: 1.5; z-index: 1;}
+	    #tooltip {
+        font-family: Helvetica, Arial, sans-serif;
+        position: absolute;
+        padding: 4px;
+        margin: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        max-width: 300px;
+        font-size: 10px;
+        z-index: 9;
+        pointer-events: none;
+        }
+    </style>
+  </head>
+
+  <body>
+    <div id="control-panel"><div>
+		<text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: bold; text-anchor:left; font-size: 15px; font-family: Arial, Helvetica, sans-serif;">Queensland Incident  Road Safety</text>
+	  </div>
+	  <br>
+	  <div>
+		<text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: normal; text-anchor:left; font-size: 10px; font-family: Arial, Helvetica, sans-serif;">Road Crashes in QLD from 2010. </text>
+	  </div>
+	  <div>
+		<text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: normal; text-anchor:left; font-size: 10px; font-family: Arial, Helvetica, sans-serif;">The layer aggregates data within the boundary of each hexagon cell</text>
+	  </div>
+	  </br>
+	  <div><label>Radius</label><input id="radius" type="range" min="100" max="1000" step="100" value="700"></input><span id="radius-value"></span></div>
+    <div><label>Coverage</label><input id="coverage" type="range" min="0" max="1" step="0.1" value="0.5"></input><span id="coverage-value"></span></div>
+    <div><label>Upper Percentile</label><input id="upperPercentile" type="range" min="90" max="100" step="1" value="100"></input><span id="upperPercentile-value"></span></div>
+    </div>
+    <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+	  <div id="tooltip"></div>
+  </body>
+
+
+  <script type="text/javascript">
+
+	  mapboxgl.accessToken = 'pk.eyJ1IjoiamF3b3JyYSIsImEiOiJjanh6ZXBoZjQwMjlvM25wamN3eWw4aHowIn0.sfurxwTqAA9OqJr72WXjAg';
+
+    const {MapboxLayer, HexagonLayer} = deck;
+
+    const map = new mapboxgl.Map({
+      container: document.body,
+      style: 'mapbox://styles/mapbox/dark-v9',
+      center: [152.0177, -26.4879],
+      zoom: 7,
+      //hash: true, //allow values to webiste
+      pitch: 60.5
+      });
+      //https://docs.mapbox.com/mapbox-gl-js/api/#videosource#getvideo
+
+      function rotateCamera(timestamp) {
+      // clamp the rotation between 0 -360 degrees
+      // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
+      map.rotateTo((timestamp / 100) % 360, {duration: 0});
+      // Request the next frame of the animation.
+      requestAnimationFrame(rotateCamera);
+      }
+
+
+      map.once('moveend', function(){
+          console.log('moveend logging');
+      //map.rotateTo(180, {duration:10000});
+      //map.rotateTo((timestamp / 100) % 360, {duration: 0});
+      rotateCamera(0);
+
+
+      //HERE -> You should use playback slidshow....
+      //implement the below code!!!
+      //https://docs.mapbox.com/mapbox-gl-js/example/playback-locations/
+
+       });
+       map.flyTo({ center: [153.0177, -27.4],
+         zoom: 10,
+         speed: 0.1, // make the flying slow
+         curve: 2, // change the speed at which it zooms out
+       });
+
+      /*
+
+      map.easeTo
+
+      map.flyTo({
+        center: [153.0177, -27.4],
+        zoom: 11,
+        speed: 0.05, // make the flying slow
+        curve: 2, // change the speed at which it zooms out
+
+        // This can be any easing function: it takes a number between
+// 0 and 1 and returns another number between 0 and 1.
+        easing(t) {
+          return t;
+        }
+      });
+      //map.setPitch(10);
+      rotateCamera(0);
+
+*/
+      /*
+      Stuck here -- need to pitc and save as video
+      map.rotateTo({
+        10
+      });
+      */
+
+      //map.setPitch({
+      //    pitch: 10.5
+      //    });
+
+
+    // Load data
+    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/heatmap-data.csv';
+
+    const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
+    const COLOR_RANGE = [
+      [1, 152, 189],
+      [73, 227, 206],
+      [216, 254, 181],
+      [254, 237, 177],
+      [254, 173, 84],
+      [209, 55, 78]
+    ];
+    const LIGHT_SETTINGS = {
+      lightsPosition: [-0.144528, 49.739968, 8000, -3.807751, 54.104682, 8000],
+      ambientRatio: 0.4,
+      diffuseRatio: 0.6,
+      specularRatio: 0.2,
+      lightsStrength: [0.8, 0.0, 0.8, 0.0],
+      numberOfLights: 2
+    };
+
+	<!-- Coverage = Hexagon radius multiplier, clamped between 0 - 1. The final radius of hexagon is calculated by coverage * radius. Note: coverage does not affect how points are binned. The radius of the bin is determined only by the radius property.-->
+	<!-- UpperPercentile = Filter bins and re-calculate color by upperPercentile. Hexagons with color value larger than the upperPercentile will be idden.-->
+
+    //DATA_URL = C:\Users\jaworra\Downloads\S3\TempVisualisation
+    //  heatmap-data.csv
+    //DATA_URL = 'C:\\Users\\jaworra\\Downloads\\S3\\TempVisualisation\\heatmap-data.csv';
+    //DATA_URL = 'heatmap-data.csv';
+
+    //var data2 = d3.csv.parseRows('heatmap-data.csv')
+
+
+    let hexagonLayer;
+    map.on('load', () => {
+      hexagonLayer = new MapboxLayer({
+        type: HexagonLayer,
+        id: 'heatmap',
+        data: d3.csv(DATA_URL),
+		    pickable: true,
+        radius: 700,
+        coverage: 0.5,
+        upperPercentile: 100,
+        colorRange: COLOR_RANGE,
+        elevationRange: [0, 1000],
+        elevationScale: 250,
+        extruded: true,
+        getPosition: d => [Number(d.lng), Number(d.lat)],
+        lightSettings: LIGHT_SETTINGS,
+        opacity: 0.6,
+    		autoHighlight: true,
+    		highlightColor: [255,255,0,250],
+    		pickable: true,
+    		onHover: onHover,
+		});
+
+      map.addLayer(hexagonLayer, 'waterway-label');
+    });
+
+    OPTIONS.forEach(key => {
+      document.getElementById(key).oninput = (evt) => {
+        const value = Number(evt.target.value);
+        document.getElementById(key + '-value').innerHTML = value;
+        if (hexagonLayer) {
+          hexagonLayer.setProps({[key]: value});
+        }
+      };
+    });
+
+	function onHover (info) {
+	  const {x, y, object} = info;
+	  if (object) {
+		tooltip.style.left = `${x}px`;
+		tooltip.style.top = `${y}px`;
+		tooltip.innerHTML = `${object.points.length} crash reports`;
+	  } else {
+		tooltip.innerHTML = '';
+	  }
+	}
+  </script>
+
+
+</html>

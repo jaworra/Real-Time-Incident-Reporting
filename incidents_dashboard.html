@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Current Incidents</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://d3js.org/d3.v2.js"></script>
+<link rel="shortcut icon" href="#" />
+
+
+<!-- React load js -->
+<script src= "https://unpkg.com/react@16/umd/react.production.min.js"></script>
+<!-- Load React DOM-->
+<script src= "https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+<!-- Load Babel Compiler -->
+<script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+/* Style the body */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+/* Header/logo Title */
+.header {
+  padding: 5px;
+  text-align: center;
+  background: #333;
+  color: white;
+}
+
+/* Increase the font size of the heading */
+.header h1 {
+  font-size: 25px;
+  font-family: Tahoma, Geneva, sans-serif;
+  text-decoration: normal;
+}
+
+/* Sticky navbar - toggles between relative and fixed, depending on the scroll position. It is positioned relative until a given offset position is met in the viewport - then it "sticks" in place (like position:fixed). The sticky value is not supported in IE or Edge 15 and earlier versions. However, for these versions the navbar will inherit default position */
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+}
+/* Style the navigation bar links */
+.navbar a {
+  float: left;
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 5px 20px;
+  text-decoration: none;
+  border: 0.5px solid #666
+;
+}
+
+
+/* Right-aligned link */
+.navbar a.right {
+  float: right;
+}
+
+/* Change color on hover */
+.navbar a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+/* Active/current link */
+.navbar a.active {
+  background-color: #666;
+  color: white;
+}
+
+/* Column container */
+.row {
+  display: -ms-flexbox; /* IE10 */
+  display: flex;
+  -ms-flex-wrap: wrap; /* IE10 */
+  flex-wrap: wrap;
+}
+
+/* Create two unequal columns that sits next to each other */
+/* Sidebar/left column */
+.side {
+  -ms-flex: 30%; /* IE10 */
+  flex: 30%;
+  background-color: #f1f1f1;
+  padding: 20px;
+}
+
+/* Main column */
+.main {
+  -ms-flex: 70%; /* IE10 */
+  flex: 70%;
+  background-color: white;
+  padding: 10px;
+}
+
+/* Fake image, just for this example */
+.fakeimg {
+  background-color: #aaa;
+  width: 100%;
+  padding: 20px;
+}
+
+/* Footer */
+.container {
+  background-color: #aaa;
+  width: 100%;
+  padding: 20px;
+}
+
+
+/* Responsive layout - when the screen is less than 700px wide, make the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 700px) {
+  .row {
+    flex-direction: column;
+  }
+}
+
+/* Responsive layout - when the screen is less than 400px wide, make the navigation links stack on top of each other instead of next to each other */
+@media screen and (max-width: 400px) {
+  .navbar a {
+    float: none;
+    width: 100%;
+  }
+}
+
+table {
+margin-left:auto;
+margin-right:auto;
+
+text-align:center;
+border-collapse: collapse;
+border: 2px black solid;
+font: 12px sans-serif;
+}
+td {
+border: 1px black solid;
+padding: 2px;
+}
+
+
+</style>
+
+<style type="text/css">
+#topright {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: block;
+    height: 125px;
+    width: 90px;
+    background-image: url('images/TMR logo.png');
+    background-repeat: no-repeat;
+    text-indent: -999em;
+    text-decoration: none;
+}
+
+/* dashboard css */
+#pieChart {    
+	position:absolute;
+	top:180px;
+	left:10px;
+	width:400px;
+	height: 400px; 
+}
+
+#lineChart {    
+	position:absolute;
+	top:600px;   /*100*/
+	left:40px;
+	height: 150px;
+}
+
+#barChart {
+	position:absolute;
+	top:200px;
+	left:350px;
+	height: 250px;
+}
+
+#barChart2 {
+	position:absolute;
+	top:200px;
+	left:850px;
+	height: 250px;
+}
+
+.slice {
+   font-size: 12pt;
+   font-family: Verdana;
+   fill: white; //svg specific - instead of color
+   font-weight: bold;	
+  		} 
+
+/*for line chart*/
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges; //The shape-rendering property is an SVG attribute, used here to make sure our axis and its tick mark lines are pixel-perfect. 
+}
+
+.line {
+  fill: none;
+  /*stroke: steelblue;*/
+  stroke-width: 3px;
+}
+
+.dot {
+  /*fill: white;*/
+  /*stroke: steelblue;*/
+  stroke-width: 1.5px;
+  }
+				
+
+.axis text {
+    font-family: Verdana;
+    font-size: 11px;
+}
+
+.title {
+	 font-family: Verdana;
+    font-size: 15px;	
+		
+}
+
+.xAxis {
+    font-family: verdana;
+    font-size: 11px;
+    fill: black;
+}  
+
+.yAxis {
+    font-family: verdana;
+    font-size: 11px;
+    fill: white;
+}
+
+  
+table {
+	border-collapse:collapse;
+	border: 0px;	
+	font-family: Verdana;	
+	color: #5C5558;
+	font-size: 12px;
+	text-align: right;			
+}
+
+td {
+	padding-left: 10px;		
+}
+
+#lineChartTitle1 {
+	font-family: Verdana;
+	font-size  : 14px;
+	fill       : lightgrey;
+	font-weight: bold;
+	text-anchor: middle;
+}
+
+#lineChartTitle2 {
+	font-family: Verdana;
+	font-size  : 72px;
+	fill       : grey;
+	text-anchor: middle;
+	font-weight: bold;
+	/*font-style: italic;*/
+}
+
+
+</style>
+<a id="topright" href="#" title="TopRight">Top Right Link Text</a>
+</head>
+<body>
+
+<div class="header">
+  <h1>Current incidents dashboard (SEQ)</h1>
+</div>
+
+<div class="navbar">
+  <a href="#" class="active">Analytics </a>
+  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_list.html"> List View </a>
+  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_map.html"> Map View</a>
+  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_priority.html"> High Priority</a>
+  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_historic.html" class="right">Historic Visualisation</a>
+</div>
+
+<div class="row" margin: 2px>
+
+  <div class="main" margin: 2px>
+    <h3 id="demo"></h3>
+    <script type="text/babel">
+    function tick() {
+      const element = (<h3>{new Date().toLocaleTimeString()}</h3>);
+      ReactDOM.render(element, document.getElementById('demo'));
+    }
+    setInterval(tick, 1000);
+    </script>
+
+<div id='container'style="height:2px;"></div>
+
+        <div id="pieChart"></div>
+        <div id="barChart"></div>  
+        <div id="barChart2"></div>
+        <div id="lineChart"></div>
+
+    <script type="text/javascript">
+
+   
+
+/*  graphs data  ------ */
+
+/*
+################ FORMATS ##################
+-------------------------------------------
+*/
+
+var 	formatAsPercentage = d3.format("%"),
+		formatAsPercentage1Dec = d3.format(".1%"),
+		formatAsInteger = d3.format(","),
+		fsec = d3.time.format("%S s"),
+		fmin = d3.time.format("%M m"),
+		fhou = d3.time.format("%H h"),
+		fwee = d3.time.format("%a"),
+		fdat = d3.time.format("%d d"),
+		fmon = d3.time.format("%b")
+		;
+/*
+############# PIE CHART ###################
+-------------------------------------------
+*/
+
+//debug
+//Build data - Pie, Bar and Bar2 graph
+const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv'; //offline
+//const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv'; //online
+d3.csv(DATA_URL, function(data) {
+console.log(data);
+
+	const DATA_URL_2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //offline
+	//const DATA_URL_2 = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/summarised_incidents.csv'; //online
+	d3.csv(DATA_URL_2, function(data2) {
+		//sets variables to int or string
+		data2.forEach(function(d) {
+            d.group = d.group;
+            d.category = parseInt(d.category);
+            d.measure = parseInt(d.measure);
+        });
+
+	console.log(data2);
+
+    //total variables
+    var totat_cnt = data.length
+    var sth_cst= 0, nth_cst =0, met = 0
+    var crsh_cnt= 0, plrd_cnt =0,fault_cnt = 0, cong_cnt = 0, sta_cnt =0
+    var unk_cnt= 0, blk_cnt =0, ptblk_cnt = 0, noblk_cnt = 0
+    //breakdowns variables - Event types
+    var sth_cst_crsh_cnt= 0, sth_cst_plrd_cnt =0,sth_cst_fault_cnt = 0, sth_cst_cong_cnt = 0, sth_cst_sta_cnt =0
+    var nth_cst_crsh_cnt= 0, nth_cst_plrd_cnt =0,nth_cst_fault_cnt = 0, nth_cst_cong_cnt = 0, nth_cst_sta_cnt =0
+    var met_cst_crsh_cnt= 0, met_cst_plrd_cnt =0,met_cst_fault_cnt = 0, met_cst_cong_cnt = 0, met_cst_sta_cnt =0
+    //breakdowns variables - Impact types
+    var sth_unk_cnt= 0, sth_blk_cnt =0, sth_ptblk_cnt = 0, sth_noblk_cnt = 0
+    var nth_unk_cnt= 0, nth_blk_cnt =0, nth_ptblk_cnt = 0, nth_noblk_cnt = 0
+    var met_unk_cnt= 0, met_blk_cnt =0, met_ptblk_cnt = 0, met_noblk_cnt = 0
+
+    for (var i = 0; i < data.length; i++) {
+
+        // - Build metrics by district for Pie, Bar and Bar2 charts
+        var event_str = data[i]['Event Type']  // missing Hazard , Alert
+        var impact_str = data[i]['Impact']  
+
+        switch(data[i]['District']){
+            case 'South Coast': 
+                sth_cst++;
+                //Events
+                if (event_str.match('Crash')) {
+                    sth_cst_crsh_cnt++;
+                }
+                else if (event_str.match('Planned Event/Roadworks')) {
+                    sth_cst_plrd_cnt++;
+                }
+                else if (event_str.match('Congestion')) {
+                    sth_cst_cong_cnt++;
+                }
+                else if (event_str.match('Fault')) {
+                    sth_cst_fault_cnt++;
+                }
+                else if (event_str.match('Stationary Vehicle')) {
+                    sth_cst_sta_cnt++;
+                }
+                //Impacts
+                if (impact_str.match('No Blockage')) {
+                    sth_noblk_cnt++;
+                }
+                else if (impact_str.match('Impact Unknown')) {
+                    sth_unk_cnt++;
+                }
+                else if (impact_str.match('Partially Blocked')) {
+                    sth_ptblk_cnt++;
+                }
+                else if (impact_str.match('Blocked')) {
+                    sth_blk_cnt++;
+                }
+            break;
+
+            case 'North Coast': 
+                nth_cst++;
+                //Events
+                if (event_str.match('Crash')) {
+                    nth_cst_crsh_cnt++;
+                }
+                else if (event_str.match('Planned Event/Roadworks')) {
+                    nth_cst_plrd_cnt++;
+                }
+                else if (event_str.match('Congestion')) {
+                    nth_cst_cong_cnt++;
+                }
+                else if (event_str.match('Fault')) {
+                    nth_cst_fault_cnt++;
+                }
+                else if (event_str.match('Stationary Vehicle')) {
+                    nth_cst_sta_cnt++;
+                }
+                //Impacts
+                if (impact_str.match('No Blockage')) {
+                    nth_noblk_cnt++;
+                }
+                else if (impact_str.match('Impact Unknown')) {
+                    nth_unk_cnt++;
+                }
+                else if (impact_str.match('Partially Blocked')) {
+                    nth_ptblk_cnt++;
+                }
+                else if (impact_str.match('Blocked')) {
+                    nth_blk_cnt++;
+                }
+            break;
+
+            case 'Metropolitan': 
+                met++;
+                //Events
+                if (event_str.match('Crash')) {
+                    met_cst_crsh_cnt++;
+                }
+                else if (event_str.match('Planned Event/Roadworks')) {
+                    met_cst_plrd_cnt++;
+                }
+                else if (event_str.match('Congestion')) {
+                    met_cst_cong_cnt++;
+                }
+                else if (event_str.match('Fault')) {
+                    met_cst_fault_cnt++;
+                }
+                else if (event_str.match('Stationary Vehicle')) {
+                    met_cst_sta_cnt++;
+                }
+                //Impacts
+                if (impact_str.match('No Blockage')) {
+                    met_noblk_cnt++;
+                }
+                else if (impact_str.match('Impact Unknown')) {
+                    met_unk_cnt++;
+                }
+                else if (impact_str.match('Partially Blocked')) {
+                    met_ptblk_cnt++;
+                }
+                else if (impact_str.match('Blocked')) {
+                    met_blk_cnt++;
+                }
+            break;
+        }
+
+        // Total count - Events
+        if (event_str.match('Crash')) {
+            crsh_cnt++;
+        }
+        else if (event_str.match('Planned Event/Roadworks')) {
+            plrd_cnt++;
+        }
+        else if (event_str.match('Congestion')) {
+            cong_cnt++;
+        }
+        else if (event_str.match('Fault')) {
+            fault_cnt++;
+        }
+        else if (event_str.match('Stationary Vehicle')) {
+            sta_cnt++;
+        }
+
+        // Total count - Impacts
+        if (impact_str.match('No Blockage')) {
+            noblk_cnt++;
+        }
+        else if (impact_str.match('Impact Unknown')) {
+            unk_cnt++;
+        }
+        else if (impact_str.match('Partially Blocked')) {
+            ptblk_cnt++;
+        }
+        else if (impact_str.match('Blocked')) {
+            blk_cnt++;
+        }
+    }
+
+    //setup array for pie graph
+    var dataset_piechart_processed= [
+		  {category: "Nth Coast", measure: nth_cst/totat_cnt},
+	      {category: "Sth Coast", measure: sth_cst/totat_cnt},
+	      {category: "Metro", measure: met/totat_cnt}
+	      ]
+          ;
+
+    var dataset_barchart_processed = [
+        { group: "All", category: "Crash", measure: crsh_cnt }, 
+        { group: "All", category: "Roadworks ", measure: plrd_cnt }, 
+        { group: "All", category: "Fault ", measure: fault_cnt }, 
+        { group: "All", category: "Congestion", measure: cong_cnt }, 
+        { group: "All", category: "Stationary Veh", measure: sta_cnt }, 
+        { group: "Sth Coast", category: "Crash", measure: sth_cst_crsh_cnt }, 
+        { group: "Sth Coast", category: "Roadworks ", measure: sth_cst_plrd_cnt }, 
+        { group: "Sth Coast", category: "Fault ", measure: sth_cst_fault_cnt }, 
+        { group: "Sth Coast", category: "Congestion", measure:sth_cst_cong_cnt }, 
+        { group: "Sth Coast", category: "Stationary Vehicle", measure: sth_cst_sta_cnt }, 
+        { group: "Nth Coast", category: "Crash", measure: nth_cst_crsh_cnt }, 
+        { group: "Nth Coast", category: "Roadworks ", measure: nth_cst_plrd_cnt  }, 
+        { group: "Nth Coast", category: "Fault ", measure: nth_cst_fault_cnt }, 
+        { group: "Nth Coast", category: "Congestion", measure: nth_cst_cong_cnt}, 
+        { group: "Nth Coast", category: "Stationary Vehicle", measure: nth_cst_sta_cnt }, 
+        { group: "Metro", category: "Crash", measure: met_cst_crsh_cnt }, 
+        { group: "Metro", category: "Roadworks ", measure: met_cst_plrd_cnt }, 
+        { group: "Metro", category: "Fault ", measure: met_cst_fault_cnt }, 
+        { group: "Metro", category: "Congestion", measure: met_cst_cong_cnt }, 
+        { group: "Metro", category: "Stationary Vehicle", measure: met_cst_sta_cnt },  
+        ]
+        ;
+
+    var dataset_barchart2_processed = [
+        { group: "All", category: "Unknown", measure: unk_cnt}, 
+        { group: "All", category: "Blocked ", measure: blk_cnt }, 
+        { group: "All", category: "Part Blocked ", measure: ptblk_cnt }, 
+        { group: "All", category: "No Blockage", measure: noblk_cnt }, 
+        { group: "Sth Coast", category: "Unknown", measure: sth_unk_cnt }, 
+        { group: "Sth Coast", category: "Blocked ", measure: sth_blk_cnt }, 
+        { group: "Sth Coast", category: "Part Blocked ", measure:sth_ptblk_cnt }, 
+        { group: "Sth Coast", category: "No Blockage", measure: sth_noblk_cnt }, 
+        { group: "Nth Coast", category: "Unkown", measure: nth_unk_cnt }, 
+        { group: "Nth Coast", category: "Blocked ", measure: nth_blk_cnt }, 
+        { group: "Nth Coast", category: "Part Blocked ", measure: nth_ptblk_cnt }, 
+        { group: "Nth Coast", category: "No Blockage", measure: nth_noblk_cnt }, 
+        { group: "Metro", category: "Unknown", measure: met_unk_cnt }, 
+        { group: "Metro", category: "Blocked ", measure: met_blk_cnt}, 
+        { group: "Metro", category: "Part Blocked ", measure: met_ptblk_cnt }, 
+        { group: "Metro", category: "No Blockage", measure: met_noblk_cnt}, 
+        ]
+        ;
+
+function dsPieChart(){
+
+    var dataset = dataset_piechart_processed
+
+	var width = 350,
+		   height = 350,
+		   outerRadius = Math.min(width, height) / 2,
+		   innerRadius = outerRadius * .999,   
+		   // for animation
+		   innerRadiusFinal = outerRadius * .45,
+		   innerRadiusFinal3 = outerRadius* .45,
+		   color = d3.scale.category20()    //builtin range of colors
+		   ;
+	    
+	var vis = d3.select("#pieChart")
+	     .append("svg:svg")              //create the SVG element inside the <body>
+	     .data([dataset])                   //associate our data with the document
+	         .attr("width", width)           //set the width and height of our visualization (these will be attributes of the <svg> tag
+	         .attr("height", height)
+	     	 .append("svg:g")                //make a group to hold our pie chart
+	         .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")")    //move the center of the pie chart from 0, 0 to radius, radius
+				;
+				
+   var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
+        	.outerRadius(outerRadius).innerRadius(innerRadius);
+   
+   // for animation
+   var arcFinal = d3.svg.arc().innerRadius(innerRadiusFinal).outerRadius(outerRadius);
+   var arcFinal3 = d3.svg.arc().innerRadius(innerRadiusFinal3).outerRadius(outerRadius);
+
+   var pie = d3.layout.pie()           //this will create arc data for us given a list of values
+        .value(function(d) { return d.measure; });    //we must tell it out to access the value of each element in our data array
+
+   var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
+        .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
+        .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
+            .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
+               .attr("class", "slice")    //allow us to style things in the slices (like text)
+               .on("mouseover", mouseover)
+    		   .on("mouseout", mouseout)
+    		   .on("click", up)
+    			;
+    				
+        arcs.append("svg:path")
+               .attr("fill", function(d, i) { return color(i); } ) //set the color for each slice to be chosen from the color function defined above
+               .attr("d", arc)     //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+					.append("svg:title") //mouseover title showing the figures
+				   .text(function(d) { return d.data.category + ": " + formatAsPercentage(d.data.measure); });			
+
+        d3.selectAll("g.slice").selectAll("path").transition()
+			    .duration(750)
+			    .delay(10)
+			    .attr("d", arcFinal )
+			    ;
+	
+	  // Add a label to the larger arcs, translated to the arc centroid and rotated.
+	  // source: http://bl.ocks.org/1305337#index.html
+	  arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; })
+	  	  .append("svg:text")
+	      .attr("dy", ".35em")
+	      .attr("text-anchor", "middle")
+	      .attr("transform", function(d) { return "translate(" + arcFinal.centroid(d) + ")rotate(" + angle(d) + ")"; })
+	      //.text(function(d) { return formatAsPercentage(d.value); })
+	      .text(function(d) { return d.data.category; })
+	      ;
+	   
+	   // Computes the label angle of an arc, converting from radians to degrees.
+		function angle(d) {
+		    var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+		    return a > 90 ? a - 180 : a;
+		}
+		    
+		// Pie chart title			
+		vis.append("svg:text")
+	      .attr("dy", ".35em")
+	      .attr("text-anchor", "middle")
+	      .text("Disticts")
+	      .attr("class","title")
+	      ;		    
+	
+	function mouseover() {
+	  d3.select(this).select("path").transition()
+	      .duration(750)
+	        		//.attr("stroke","red")
+	        		//.attr("stroke-width", 1.5)
+	        		.attr("d", arcFinal3)
+	        		;
+	}
+	
+	function mouseout() {
+	  d3.select(this).select("path").transition()
+	      .duration(750)
+	        		//.attr("stroke","blue")
+	        		//.attr("stroke-width", 1.5)
+	        		.attr("d", arcFinal)
+	        		;
+	}
+	
+	function up(d, i) {
+	
+				/* update bar chart when user selects piece of the pie chart */
+				//updateBarChart(dataset[i].category);
+				updateBarChart(d.data.category, color(i));
+                updateLineChart(d.data.category, color(i));
+                updateBarChart_new(d.data.category, color(i));
+			 
+	}
+}
+
+dsPieChart();
+
+/*
+############# BAR CHART ###################
+-------------------------------------------
+*/
+
+var datasetBarChart = dataset_barchart_processed
+
+// set initial group value
+var group = "All";
+
+function datasetBarChosen(group) {
+	var ds = [];
+	for (x in datasetBarChart) {
+		 if(datasetBarChart[x].group==group){
+		 	ds.push(datasetBarChart[x]);
+		 } 
+		}
+	return ds;
+}
+
+
+function dsBarChartBasics() {
+
+		var margin = {top: 30, right: 5, bottom: 20, left: 50},
+		width = 500 - margin.left - margin.right,
+	    height = 250 - margin.top - margin.bottom,
+		colorBar = d3.scale.category20(),
+		barPadding = 1
+		;
+		
+		return {
+			margin : margin, 
+			width : width, 
+			height : height, 
+			colorBar : colorBar, 
+			barPadding : barPadding
+		}			
+		;
+}
+
+function dsBarChart() {
+
+	var firstDatasetBarChart = datasetBarChosen(group);         	
+	
+	var basics = dsBarChartBasics();
+	
+	var margin = basics.margin,
+		width = basics.width,
+	   height = basics.height,
+		colorBar = basics.colorBar,
+		barPadding = basics.barPadding
+		;
+					
+	var xScale = d3.scale.linear()
+						.domain([0, firstDatasetBarChart.length])
+						.range([0, width])
+						;
+						
+	// Create linear y scale 
+	// Purpose: No matter what the data is, the bar should fit into the svg area; bars should not
+	// get higher than the svg height. Hence incoming data needs to be scaled to fit into the svg area.  
+	var yScale = d3.scale.linear()
+			// use the max funtion to derive end point of the domain (max value of the dataset)
+			// do not use the min value of the dataset as min of the domain as otherwise you will not see the first bar
+		   .domain([0, d3.max(firstDatasetBarChart, function(d) { return d.measure; })])
+		   // As coordinates are always defined from the top left corner, the y position of the bar
+		   // is the svg height minus the data value. So you basically draw the bar starting from the top. 
+		   // To have the y position calculated by the range function
+		   .range([height, 0])
+		   ;
+	
+	//Create SVG element
+	
+	var svg = d3.select("#barChart")
+			.append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+		    .attr("id","barChartPlot")
+		    ;
+	
+	var plot = svg
+		    .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+		    ;
+	            
+	plot.selectAll("rect")
+		   .data(firstDatasetBarChart)
+		   .enter()
+		   .append("rect")
+			.attr("x", function(d, i) {
+			    return xScale(i);
+			})
+		   .attr("width", width / firstDatasetBarChart.length - barPadding)   
+			.attr("y", function(d) {
+			    return yScale(d.measure);
+			})  
+			.attr("height", function(d) {
+			    return height-yScale(d.measure);
+			})
+			.attr("fill", "lightgrey")
+			;
+	
+		
+	// Add y labels to plot	
+	
+	plot.selectAll("text")
+	.data(firstDatasetBarChart)
+	.enter()
+	.append("text")
+	.text(function(d) {
+			return formatAsInteger(d3.round(d.measure));
+	})
+	.attr("text-anchor", "middle")
+	// Set x position to the left edge of each bar plus half the bar width
+	.attr("x", function(d, i) {
+			return (i * (width / firstDatasetBarChart.length)) + ((width / firstDatasetBarChart.length - barPadding) / 2);
+	})
+	.attr("y", function(d) {
+			return yScale(d.measure) + 14;
+	})
+	.attr("class", "yAxis")
+	/* moved to CSS			   
+	.attr("font-family", "sans-serif")
+	.attr("font-size", "11px")
+	.attr("fill", "white")
+	*/
+	;
+	
+	// Add x labels to chart	
+	
+	var xLabels = svg
+		    .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + (margin.top + height)  + ")")
+		    ;
+	
+	xLabels.selectAll("text.xAxis")
+		  .data(firstDatasetBarChart)
+		  .enter()
+		  .append("text")
+		  .text(function(d) { return d.category;})
+		  .attr("text-anchor", "middle")
+			// Set x position to the left edge of each bar plus half the bar width
+						   .attr("x", function(d, i) {
+						   		return (i * (width / firstDatasetBarChart.length)) + ((width / firstDatasetBarChart.length - barPadding) / 2);
+						   })
+		  .attr("y", 15)
+		  .attr("class", "xAxis")
+		  //.attr("style", "font-size: 12; font-family: Helvetica, sans-serif")
+		  ;			
+	 
+	// Title
+	
+	svg.append("text")
+		.attr("x", (width + margin.left + margin.right)/2)
+		.attr("y", 15)
+		.attr("class","title")				
+		.attr("text-anchor", "middle")
+		.text("Overall Events in last 24 hours")
+		;
+}
+
+dsBarChart();
+
+ /* ** UPDATE CHART ** */
+ 
+/* updates bar chart on request */
+
+function updateBarChart(group, colorChosen) {
+	
+		var currentDatasetBarChart = datasetBarChosen(group);
+		
+		var basics = dsBarChartBasics();
+	
+		var margin = basics.margin,
+			width = basics.width,
+		   height = basics.height,
+			colorBar = basics.colorBar,
+			barPadding = basics.barPadding
+			;
+		
+		var 	xScale = d3.scale.linear()
+			.domain([0, currentDatasetBarChart.length])
+			.range([0, width])
+			;
+		
+			
+		var yScale = d3.scale.linear()
+	      .domain([0, d3.max(currentDatasetBarChart, function(d) { return d.measure; })])
+	      .range([height,0])
+	      ;
+	      
+	   var svg = d3.select("#barChart svg");
+	      
+	   var plot = d3.select("#barChartPlot")
+	   	.datum(currentDatasetBarChart)
+		   ;
+	
+	  		/* Note that here we only have to select the elements - no more appending! */
+	  	plot.selectAll("rect")
+	      .data(currentDatasetBarChart)
+	      .transition()
+			.duration(750)
+			.attr("x", function(d, i) {
+			    return xScale(i);
+			})
+		   .attr("width", width / currentDatasetBarChart.length - barPadding)   
+			.attr("y", function(d) {
+			    return yScale(d.measure);
+			})  
+			.attr("height", function(d) {
+			    return height-yScale(d.measure);
+			})
+			.attr("fill", colorChosen)
+			;
+		
+		plot.selectAll("text.yAxis") // target the text element(s) which has a yAxis class defined
+			.data(currentDatasetBarChart)
+			.transition()
+			.duration(750)
+		   .attr("text-anchor", "middle")
+		   .attr("x", function(d, i) {
+		   		return (i * (width / currentDatasetBarChart.length)) + ((width / currentDatasetBarChart.length - barPadding) / 2);
+		   })
+		   .attr("y", function(d) {
+		   		return yScale(d.measure) + 14;
+		   })
+		   .text(function(d) {
+				return formatAsInteger(d3.round(d.measure));
+		   })
+		   .attr("class", "yAxis")					 
+		;
+		
+
+		svg.selectAll("text.title") // target the text element(s) which has a title class defined
+			.attr("x", (width + margin.left + margin.right)/2)
+			.attr("y", 15)
+			.attr("class","title")				
+			.attr("text-anchor", "middle")
+			.text(group + "'s Events in the last 24 hours")
+		;
+}
+
+/*------------------------------------------------------------------------------------------------------
+
+/*
+############# BAR CHART 2 ###################
+-------------------------------------------
+*/
+
+
+/*
+//Debug mode
+var datasetLineChart = [
+{ group: "All", category: 2008, measure: 289309 }, 
+{ group: "All", category: 2009, measure: 234998 }, 
+{ group: "All", category: 2010, measure: 310900 }, 
+{ group: "All", category: 2011, measure: 223900 }, 
+{ group: "All", category: 2012, measure: 234500 }, 
+{ group: "All", category: 2013, measure: 310900 }, 
+{ group: "All", category: 2014, measure: 223900 }, 
+{ group: "All", category: 2015, measure: 234500 }, 
+{ group: "Sth Coast", category: 2008, measure: 81006.52 }, 
+{ group: "Sth Coast", category: 2009, measure: 70499.4 }, 
+{ group: "Sth Coast", category: 2010, measure: 96379 }, 
+{ group: "Sth Coast", category: 2011, measure: 64931 }, 
+{ group: "Sth Coast", category: 2012, measure: 70350 }, 
+{ group: "Sth Coast", category: 2010, measure: 96379 }, 
+{ group: "Sth Coast", category: 2011, measure: 64931 }, 
+{ group: "Sth Coast", category: 2012, measure: 70350 }, 
+{ group: "Nth Coast", category: 2008, measure: 63647.98 }, 
+{ group: "Nth Coast", category: 2009, measure: 61099.48 }, 
+{ group: "Nth Coast", category: 2010, measure: 87052 }, 
+{ group: "Nth Coast", category: 2011, measure: 58214 }, 
+{ group: "Nth Coast", category: 2012, measure: 58625 }, 
+{ group: "Nth Coast", category: 2010, measure: 87052 }, 
+{ group: "Nth Coast", category: 2011, measure: 58214 }, 
+{ group: "Nth Coast", category: 2012, measure: 58625 }, 
+{ group: "Metro", category: 2008, measure: 23144.72 }, 
+{ group: "Metro", category: 2009, measure: 14099.88 }, 
+{ group: "Metro", category: 2010, measure: 15545 }, 
+{ group: "Metro", category: 2011, measure: 11195 }, 
+{ group: "Metro", category: 2012, measure: 11725 }, 
+{ group: "Metro", category: 2010, measure: 15545 }, 
+{ group: "Metro", category: 2011, measure: 11195 }, 
+{ group: "Metro", category: 2012, measure: 11725 }
+]
+;
+
+
+*/
+
+var datasetBarChart_new = dataset_barchart2_processed
+
+// set initial group value
+var group = "All";
+
+function datasetBarChosen_new(group) {
+	var ds = [];
+	for (x in datasetBarChart_new) {
+		 if(datasetBarChart_new[x].group==group){
+		 	ds.push(datasetBarChart_new[x]);
+		 } 
+		}
+	return ds;
+}
+
+
+function dsBarChartBasics_new() {
+
+		var margin = {top: 30, right: 5, bottom: 20, left: 50},
+		width = 411 - margin.left - margin.right,
+	    height = 250 - margin.top - margin.bottom,
+		colorBar = d3.scale.category20(),
+		barPadding = 1
+		;
+		
+		return {
+			margin : margin, 
+			width : width, 
+			height : height, 
+			colorBar : colorBar, 
+			barPadding : barPadding
+		}			
+		;
+}
+
+function dsBarChart_new() {
+
+	var firstDatasetBarChart_new = datasetBarChosen_new(group);         	
+	
+	var basics = dsBarChartBasics_new();
+	
+	var margin = basics.margin,
+		width = basics.width,
+	   	height = basics.height,
+		colorBar = basics.colorBar,
+		barPadding = basics.barPadding
+		;
+					
+	var xScale = d3.scale.linear()
+						.domain([0, firstDatasetBarChart_new.length])
+						.range([0, width])
+						;
+						
+	// Create linear y scale 
+	// Purpose: No matter what the data is, the bar should fit into the svg area; bars should not
+	// get higher than the svg height. Hence incoming data needs to be scaled to fit into the svg area.  
+	var yScale = d3.scale.linear()
+			// use the max funtion to derive end point of the domain (max value of the dataset)
+			// do not use the min value of the dataset as min of the domain as otherwise you will not see the first bar
+		   .domain([0, d3.max(firstDatasetBarChart_new, function(d) { return d.measure; })])
+		   // As coordinates are always defined from the top left corner, the y position of the bar
+		   // is the svg height minus the data value. So you basically draw the bar starting from the top. 
+		   // To have the y position calculated by the range function
+		   .range([height, 0])
+		   ;
+	
+	//Create SVG element
+	
+	var svg = d3.select("#barChart2")
+			.append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+		    .attr("id","barChartPlot2")
+		    ;
+	
+	var plot = svg
+		    .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+		    ;
+	            
+	plot.selectAll("rect")
+		   .data(firstDatasetBarChart_new)
+		   .enter()
+		   .append("rect")
+			.attr("x", function(d, i) {
+			    return xScale(i);
+			})
+		   .attr("width", width / firstDatasetBarChart_new.length - barPadding)   
+			.attr("y", function(d) {
+			    return yScale(d.measure);
+			})  
+			.attr("height", function(d) {
+			    return height-yScale(d.measure);
+			})
+			.attr("fill", "lightgrey")
+			;
+	
+		
+	// Add y labels to plot	
+	plot.selectAll("text")
+	.data(firstDatasetBarChart_new)
+	.enter()
+	.append("text")
+	.text(function(d) {
+			return formatAsInteger(d3.round(d.measure));
+	})
+	.attr("text-anchor", "middle")
+	// Set x position to the left edge of each bar plus half the bar width
+	.attr("x", function(d, i) {
+			return (i * (width / firstDatasetBarChart_new.length)) + ((width / firstDatasetBarChart_new.length - barPadding) / 2);
+	})
+	.attr("y", function(d) {
+			return yScale(d.measure) + 14;
+	})
+	.attr("class", "yAxis")
+	/* moved to CSS			   
+	.attr("font-family", "sans-serif")
+	.attr("font-size", "11px")
+	.attr("fill", "white")
+	*/
+	;
+	
+	// Add x labels to chart	
+	
+	var xLabels = svg
+		    .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + (margin.top + height)  + ")")
+		    ;
+	
+	xLabels.selectAll("text.xAxis")
+		  .data(firstDatasetBarChart_new)
+		  .enter()
+		  .append("text")
+		  .text(function(d) { return d.category;})
+		  .attr("text-anchor", "middle")
+			// Set x position to the left edge of each bar plus half the bar width
+						   .attr("x", function(d, i) {
+						   		return (i * (width / firstDatasetBarChart_new.length)) + ((width / firstDatasetBarChart_new.length - barPadding) / 2);
+						   })
+		  .attr("y", 15)
+		  .attr("class", "xAxis")
+		  //.attr("style", "font-size: 12; font-family: Helvetica, sans-serif")
+		  ;			
+	 
+	// Title
+	svg.append("text")
+		.attr("x", (width + margin.left + margin.right)/2)
+		.attr("y", 15)
+		.attr("class","title")				
+		.attr("text-anchor", "middle")
+		.text("Overall Impacts in last 24 hours")
+		;
+}
+
+dsBarChart_new();
+
+ /* ** UPDATE CHART ** */
+ 
+/* updates bar chart on request */
+
+function updateBarChart_new(group, colorChosen) {
+	
+		var currentDatasetBarChart_new = datasetBarChosen_new(group);
+        
+        //console.log(currentDatasetBarChart_new)
+		var basics = dsBarChartBasics_new();
+        //console.log(basics)
+
+		var margin = basics.margin,
+			width = basics.width,
+		    height = basics.height,
+			colorBar = basics.colorBar,
+			barPadding = basics.barPadding
+			;
+		
+		var xScale = d3.scale.linear()
+			.domain([0, currentDatasetBarChart_new.length])
+			.range([0, width])
+			;
+		
+		var yScale = d3.scale.linear()
+	      .domain([0, d3.max(currentDatasetBarChart_new, function(d) { return d.measure; })])
+	      .range([height,0])
+	      ;
+	      
+	   var svg = d3.select("#barChart2");
+	      
+	   var plot = d3.select("#barChartPlot2")
+	   	.datum(currentDatasetBarChart_new)
+		   ;
+	
+	  	/* Note that here we only have to select the elements - no more appending! */
+	  	plot.selectAll("rect")
+	      .data(currentDatasetBarChart_new)
+	      .transition()
+			.duration(750)
+			.attr("x", function(d, i) {
+			    return xScale(i);
+			})
+		   .attr("width", width / currentDatasetBarChart_new.length - barPadding)   
+			.attr("y", function(d) {
+			    return yScale(d.measure);
+			})  
+			.attr("height", function(d) {
+			    return height-yScale(d.measure);
+			})
+			.attr("fill", colorChosen)
+			;
+		
+		plot.selectAll("text.yAxis") // target the text element(s) which has a yAxis class defined
+            .data(currentDatasetBarChart_new)
+			.transition()
+			.duration(750)
+		   .attr("text-anchor", "middle")
+		   .attr("x", function(d, i) {
+		   		return (i * (width / currentDatasetBarChart_new.length)) + ((width / currentDatasetBarChart_new.length - barPadding) / 2);
+		   })
+		   .attr("y", function(d) {
+		   		return yScale(d.measure) + 14;
+		   })
+		   .text(function(d) {
+				return formatAsInteger(d3.round(d.measure));
+		   })
+		   .attr("class", "yAxis")					 
+		;
+		
+
+		svg.selectAll("text.title") // target the text element(s) which has a title class defined
+			.attr("x", (width + margin.left + margin.right)/2)
+			.attr("y", 15)
+			.attr("class","title")				
+			.attr("text-anchor", "middle")
+			.text(group + "'s Impacts in the last 24 hours")
+		;
+}
+
+
+/*
+const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //offline
+//const DATA_URL = 'public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/summarised_incidents.csv'; //online
+d3.csv(DATA_URL2, function(data2) {
+console.log(data);
+*/
+
+/*
+############# LINE CHART ##################
+-------------------------------------------
+*/
+
+
+
+//new line
+var line2 = [
+{ group: "All", category: 14, measure: 4 }, 
+{ group: "All", category: 15, measure: 4 }, 
+{ group: "All", category: 16, measure: 5 }, 
+{ group: "All", category: 17, measure: 4 }, 
+{ group: "All", category: 18, measure: 4 }, 
+{ group: "All", category: 19, measure: 4 }, 
+{ group: "All", category: 20, measure: 6 }, 
+{ group: "All", category: 21, measure: 4 }, 
+{ group: "All", category: 22, measure: 4 }, 
+{ group: "All", category: 23, measure: 6 }, 
+{ group: "All", category: 0, measure: 8 }, 
+{ group: "All", category: 1, measure: 5 }, 
+{ group: "All", category: 2, measure: 2 }, 
+{ group: "All", category: 3, measure: 2 }, 
+{ group: "All", category: 4, measure: 2 }, 
+{ group: "All", category: 5, measure: 8 }, 
+{ group: "All", category: 6, measure: 10 }, 
+{ group: "All", category: 7, measure: 6 }, 
+{ group: "All", category: 8, measure: 8 }, 
+{ group: "All", category: 9, measure: 9 }, 
+{ group: "All", category: 10, measure: 6 }, 
+{ group: "All", category: 11, measure: 2 }, 
+{ group: "All", category: 12, measure: 3 }, 
+{ group: "All", category: 13, measure: 4 }, 
+{ group: "All", category: 14, measure: 5 }
+]
+;
+
+console.log(line2)
+
+// changes....
+var datasetLineChart = data2
+
+// set initial category value
+var group = "All";
+
+function datasetLineChartChosen(group) {
+	var ds = [];
+	for (x in datasetLineChart) {
+		 if(datasetLineChart[x].group==group){
+		 	ds.push(datasetLineChart[x]);
+		 } 
+		}
+	return ds;
+}
+
+function dsLineChartBasics() {
+    
+	var margin = {top: 20, right: 10, bottom: 0, left: 5},
+	    width = 1200 - margin.left - margin.right,
+	    height = 150 - margin.top - margin.bottom
+	    ;
+		
+		return {
+			margin : margin, 
+			width : width, 
+			height : height
+		}			
+		;
+}
+
+function dsLineChart() {
+
+	var firstDatasetLineChart = datasetLineChartChosen(group);    
+	var basics = dsLineChartBasics();
+	
+	var margin = basics.margin,
+	    width = basics.width,
+	   	height = basics.height
+		;
+
+	var xScale = d3.scale.linear()
+	    .domain([0, firstDatasetLineChart.length-1])
+	    .range([0, width])
+	    ;
+
+	var yScale = d3.scale.linear()
+	    .domain([-1, d3.max(firstDatasetLineChart, function(d) { return d.measure; })])
+	    .range([height, 0])
+		;
+		
+	var line = d3.svg.line()
+	    //.x(function(d) { return xScale(d.category); })
+	    .x(function(d, i) { return xScale(i); })
+	    .y(function(d) { return yScale(d.measure); })
+	    ;
+	
+	var svg = d3.select("#lineChart").append("svg")
+	    .datum(firstDatasetLineChart)
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	    // create group and move it so that margins are respected (space for axis and title)
+	    
+	var plot = svg
+	    .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	    .attr("id", "lineChartPlot")
+	    ;
+
+	/* descriptive titles as part of plot -- start */
+	var dsLength=firstDatasetLineChart.length;
+
+	plot.append("text")
+		.text(firstDatasetLineChart[dsLength-1].measure)
+		.attr("id","lineChartTitle2")
+		.attr("x",width/2)
+		.attr("y",height/2)	
+		;
+	/* descriptive titles -- end */
+		
+	//add line
+	plot.append("path")
+	    .attr("class", "line")
+	    .attr("d", line)	
+	    // add color
+		.attr("stroke", "lightgrey")
+		;
+	// Add line2
+	plot.append("path")
+		.data([line2])
+		.attr("class", "line")
+		.style("stroke", "red")
+		.style("stroke-dasharray","2,5")//dashed array for line
+		.style("stroke-width", 1)
+		.attr("d", line);
+		
+	plot.selectAll(".dot")
+	    .data(firstDatasetLineChart)
+	  	.enter().append("circle")
+	    .attr("class", "dot")
+	    //.attr("stroke", function (d) { return d.measure==datasetMeasureMin ? "red" : (d.measure==datasetMeasureMax ? "green" : "steelblue") } )
+	    .attr("fill", function (d) { return d.measure==d3.min(firstDatasetLineChart, function(d) { return d.measure; }) ? "green" : (d.measure==d3.max(firstDatasetLineChart, function(d) { return d.measure; }) ? "red" : "white") } )
+	    //.attr("stroke-width", function (d) { return d.measure==datasetMeasureMin || d.measure==datasetMeasureMax ? "3px" : "1.5px"} )
+	    .attr("cx", line.x())
+	    .attr("cy", line.y())
+	    .attr("r", 3.5)
+	    .attr("stroke", "lightgrey")
+	    .append("title")
+	    .text(function(d) { return d.category + ": " + formatAsInteger(d.measure); })
+	    ;
+
+	svg.append("text")
+		.text("Current Incidents")
+		.attr("id","lineChartTitle1")	
+		.attr("x",margin.left + ((width + margin.right)/2))
+		.attr("y", 10)
+		;
+}
+
+dsLineChart();
+
+ /* ** UPDATE CHART ** */
+ 
+/* updates bar chart on request */
+function updateLineChart(group, colorChosen) {
+
+    var currentDatasetLineChart = datasetLineChartChosen(group);   
+    
+	var basics = dsLineChartBasics();
+	
+	var margin = basics.margin,
+		width = basics.width,
+	   	height = basics.height
+		;
+
+	var xScale = d3.scale.linear()
+	    .domain([0, currentDatasetLineChart.length-1])
+	    .range([0, width])
+	    ;
+
+	var yScale = d3.scale.linear()
+	    .domain([d3.min(currentDatasetLineChart, function(d) { return d.measure; })-1, d3.max(currentDatasetLineChart, function(d) { return d.measure; })])
+	    .range([height, 0])
+	    ;
+	
+	var line = d3.svg.line()
+    	.x(function(d, i) { return xScale(i); })
+    	.y(function(d) { return yScale(d.measure); })
+    ;
+
+   var plot = d3.select("#lineChartPlot")
+   		.datum(currentDatasetLineChart)
+	   ;
+	   
+	/* descriptive titles as part of plot -- start */
+	var dsLength=currentDatasetLineChart.length;
+	
+	plot.select("text")
+		.text(currentDatasetLineChart[dsLength-1].measure) // this shows performance measures
+		;
+	/* descriptive titles -- end */
+	   
+	plot
+		.select("path")
+		.transition()
+		.duration(750)			    
+	    .attr("class", "line")
+	    .attr("d", line)	
+	   // add color
+		.attr("stroke", colorChosen)
+	   ;
+	   
+	var path = plot
+		.selectAll(".dot")
+		.data(currentDatasetLineChart)
+		.transition()
+		.duration(750)
+		.attr("class", "dot")
+		.attr("fill", function (d) { return d.measure==d3.min(currentDatasetLineChart, function(d) { return d.measure; }) ? "green" : (d.measure==d3.max(currentDatasetLineChart, function(d) { return d.measure; }) ? "red" : "white") } )
+		.attr("cx", line.x())
+		.attr("cy", line.y())
+		.attr("r", 3.5)
+	   // add color
+		.attr("stroke", colorChosen)
+	   ;
+	   
+	   path
+	   .selectAll("title")
+	   .text(function(d) { return d.category + ": " + formatAsInteger(d.measure); })	 
+	   ;  
+
+}
+
+
+	}); //d3 csv load
+
+}); //d3 csv load
+
+
+
+
+
+
+
+
+
+
+
+/*   -- tables data
+const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv'; //offline
+//const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv';
+
+//Table generation
+          d3.text(DATA_URL2).then(function(data) {
+          var rows  = d3.csvParseRows(data),
+          table = d3.select('body').append('table')
+          .style("border-collapse", "collapse")
+          .style("width", "100%")
+          .style("border", "2px black solid");
+
+          //headers
+          table.append("thead").append("tr")
+          .selectAll("th")
+          .data(rows[0])
+          .enter().append("th")
+          .text(function(d) { return d; })
+          .style("border", "1px black solid")
+          .style("padding", "5px")
+          .style("background-color", "lightgray")
+          .style("font-weight", "bold")
+          .style("text-transform", "uppercase");
+          
+
+          // select out by district  - THIS PART HERE!!!
+          var new_index = []
+          var district_sel = "Metropolitan"//"North Coast" "South Coast" ""
+          var index;
+          for (index = 0; index < rows.length; ++index) {
+              if (rows[index][3] == district_sel){new_index.push(rows[index])}
+          }
+          //console.log(new_index);
+
+          // data
+          table.append("tbody")
+          //.selectAll("tr").data(rows.slice(1))
+          .selectAll("tr").data(new_index.slice(1)) // - take this out for all datasets
+          .enter().append("tr")
+          .selectAll("td")
+          .data(function(d){return d;})
+          .enter().append("td")
+          .style("border", "1px black solid")
+          .style("padding", "2px")
+          .on("mouseover", function(){
+          d3.select(this).style("background-color", "powderblue");
+          })
+          .on("mouseout", function(){
+          d3.select(this).style("background-color", "white");
+          })
+          .text(function(d){return d;})
+          .style("font-size", "11px");
+           //console.log(rows);
+    });
+
+//---------------------------------------------------------------------------------------
+//extract number of rows and Crashes
+    //find the number of Crashes
+    //look in to the event type column and search for text 'crash'
+    d3.csv(DATA_URL).then(function(data) {
+    var incEvt = data.map(function(d) { return d["Event Type"]; });
+
+    var currentCrash = 0;
+    var evntTxt ="";
+    var regStr = /Crash/g;  // come back to this and fix regex so that there is no lowercase
+    for (var i=0;i<data.length;i++) {
+        evntTxt = data[i]["Event Type"];
+        //Count
+        if ((evntTxt.match(regStr) || []).length > 0) {
+        //console.log("sss",evntTxt);
+        currentCrash++;
+        }
+      }
+    //console.log("Total of current crashes:", currentCrash);
+    var currentInc = data.length // number of rows = incidents
+    //console.log("Total of current inicidents:",currentInc);
+
+//---------------------------------------------------------------------------------------
+//  statistics - Set variables
+    // 1) First look at current time 2) find nearest stat time - csv 3)load csv and compare
+    var today = new Date();
+    var gsDayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var dayName = gsDayNames[today.getDay()];
+    console.log("Current Day:",dayName)
+    var currTime = today.getHours()+"" + today.getMinutes()
+    console.log("Current Time:",currTime)
+    var coeff = 1000 * 60 * 15;
+    var date = new Date();  //or use any other date
+    var rounded = new Date(Math.round(date.getTime() / coeff) * coeff)
+    var rdTime = ('0000' + (rounded.getHours() * 100 + rounded.getMinutes())).slice(-4);
+    var file = rdTime +'.csv'  // unload this!!!
+
+    const STAT_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/stat/'+file;
+    //const STAT_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/0800.csv';  // for offline
+
+    d3.csv(STAT_URL).then(function(data) {
+      //console.log("Every day:",data)  // load all data
+      data = data.filter(function(d) { return d.Weekday == dayName }); //set data to only pull same day
+      //console.log("Same day:",data) // just same day data
+
+//set array load - Sorted for statisics
+      sortedIn = data.map(d => d.IncidentCount).filter(d => d !== null && !isNaN(d)).sort(d3.ascending)
+      sortedCr = data.map(d => d.CrashCount).filter(d => d !== null && !isNaN(d)).sort(d3.ascending)
+
+//calulate statistics - Quatntile/Mean/Median
+      incQ1 = d3.quantile(sortedIn, 0.25)
+      incMean = d3.mean(sortedIn)
+      incMedian = d3.median(sortedIn)
+      incQ3 = d3.quantile(sortedIn, 0.75)
+      crsQ1 = d3.quantile(sortedCr, 0.25)
+      crsMean = d3.mean(sortedCr)
+      crsMedian = d3.median(sortedCr)
+      crsQ3 = d3.quantile(sortedCr, 0.75)
+
+      console.log("Current Inicidents:",currentInc);
+      console.log("Historic File load:",file);
+      console.log("Historic Incidents:","Q1:",incQ1,"Mean:",incMean,"Median",incMedian,"Q3",incQ3);
+      console.log("Current Crashes:", currentCrash);
+      console.log("Historic Crash","Q1:",crsQ1,"Mean:",crsMean,"Median",crsMedian,"Q3",crsQ3);
+
+//compare statistic and output.
+      //Incidents data
+      if (incQ1 > currentInc){    // 29.25 > 40
+        insClr = "green";
+        insTxt = "Less incidents then normal";
+      } else if (incQ3 >= currentInc) { // 35 > 40
+        insClr = "orange";
+        insTxt = "Normal incidents performance";
+      } else {   // 1 < 0.7
+        insClr = "red";
+        insTxt = "More incidents than normal";
+      }
+
+      //Crash data
+      if (crsQ1 > currentCrash){    // 0 > 1
+        crsClr = "green";
+        crsTxt = "Less crashes then normal";
+      }  else if (crsQ3 >= currentCrash) {  // 1 >= 1
+        crsClr = "orange";
+        crsTxt = "Normal crash performance";
+      } else {   // 1 <1
+        crsClr = "red";
+        crsTxt = "More crashes than normal";
+      }
+      var txtSize = "16px"
+      d3.select("h1").append("p").text(insTxt).style("color", insClr).style("font-size", txtSize).append("span").text(" / ").style("color", "white").append("span").text(crsTxt).style("color", crsClr).style("font-size", txtSize);
+      //d3.select("h1").append("p").text(crsTxt).style("color", crsClr);
+      });
+
+  });
+
+
+
+//---------------------------------------------------------------------------------------
+// This refresh every x seconds or x mins  - Need to change this react - rending
+/*
+    const sec_5 = 5000
+    const sec_30 = 30000
+    const min_1 = 60000
+    setTimeout(function(){
+      window.location.reload(1);
+    }, min_1);
+*/
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,271 @@
+<html>
+  <head>
+    <title>Road Crashes in QLD</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <script src="https://unpkg.com/deck.gl@^6.2.0/deckgl.min.js"></script>
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <style type="text/css">
+      body { font-family: Helvetica, Arial, sans-serif; width: 100vw; height: 100vh; margin: 0; }
+      #control-panel { position: absolute; background: #fff; bottom: 0; left: 0; margin: 12px; padding: 20px; font-size: 12px; line-height: 1.5; z-index: 1; }
+	    #tooltip {
+        font-family: Helvetica, Arial, sans-serif;
+        position: absolute;
+        padding: 4px;
+        margin: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        max-width: 300px;
+        font-size: 10px;
+        z-index: 9;
+        pointer-events: none;
+        }
+
+        .map-overlay-container {
+        position: absolute;
+        width: 25%;
+        top: 0;
+        left: 0;
+        padding: 10px;
+        z-index: 1;
+        }
+
+        .map-overlay {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #fff;
+        border-radius: 3px;
+        padding: 10px;
+        box-shadow:0 1px 2px rgba(0,0,0,0.20);
+        }
+
+        .map-overlay h2,
+        .map-overlay p {
+          margin: 0 0 10px;
+        }
+
+
+    </style>
+  </head>
+
+  <body>
+    <div id="control-panel"><div>
+		<text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: bold; text-anchor:left; font-size: 15px; font-family: Arial, Helvetica, sans-serif;">Queensland Incident  Road Safety</text>
+	  </div>
+	  <br>
+	  <div>
+		<text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: normal; text-anchor:left; font-size: 10px; font-family: Arial, Helvetica, sans-serif;">Road Crashes in QLD from 2010. </text>
+	  </div>
+	  <div>
+		<text y="18" x="100%" y="100%" style="dominant-baseline:central;font-weight: normal; text-anchor:left; font-size: 10px; font-family: Arial, Helvetica, sans-serif;">The layer aggregates data within the boundary of each hexagon cell</text>
+	  </div>
+	  </br>
+	  <div><label>Radius</label><input id="radius" type="range" min="100" max="1000" step="100" value="700"></input><span id="radius-value"></span></div>
+    <div><label>Coverage</label><input id="coverage" type="range" min="0" max="1" step="0.1" value="0.5"></input><span id="coverage-value"></span></div>
+    <div><label>Upper Percentile</label><input id="upperPercentile" type="range" min="90" max="100" step="1" value="100"></input><span id="upperPercentile-value"></span></div>
+    </div>
+    <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/Incidents_homepage.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+	  <div id="tooltip"></div>
+
+    <div class='map-overlay-container'>
+    <div class='map-overlay'>
+    <h2 id='location-title'></h2>
+    <p id='location-description'></p>
+  </div>
+  </div>
+
+  </body>
+
+
+  <script type="text/javascript">
+
+	  mapboxgl.accessToken = 'pk.eyJ1IjoiamF3b3JyYSIsImEiOiJjanh6ZXBoZjQwMjlvM25wamN3eWw4aHowIn0.sfurxwTqAA9OqJr72WXjAg';
+
+    const {MapboxLayer, HexagonLayer} = deck;
+
+    const map = new mapboxgl.Map({
+      container: document.body,
+      style: 'mapbox://styles/mapbox/dark-v9',
+      center: [152.0177, -26.4879],
+      zoom: 7,
+      //hash: true, //allow values to webiste
+      pitch: 60.5
+      });
+      //https://docs.mapbox.com/mapbox-gl-js/api/#videosource#getvideo
+
+      var title = document.getElementById('location-title');
+      var description = document.getElementById('location-description');
+      var locations = [{
+      "id": "2",
+      "title": "Cairns",
+      "description": "Population of 145,000, Cairns has experienced an average annual growth rate o f 2.3% over the last 10 years. Of particlar interest is the sparseness of impacts and a particlar peak in Smithfield (north of CBD) - 570 crash reposts in this hotspot.",
+      "camera": {
+      center: [145.766507, -16.923376],
+      zoom: 12.21,
+      pitch: 50
+      }
+      }, {
+      "id": "3",
+      "title": "Rockhmapton",
+      "description": "The beef capital of Australia, Rockhampton population is 77,000. There is a spread of crashs around the CBD however the frequency is comparatively low.",
+      "camera": {
+      center: [150.511778, -23.377250],
+      bearing: -8.9,
+      zoom: 11.68
+      }
+      }, {
+      "id": "1",
+      "title": "Sunshine Coast",
+      "description": "Urban population of 302,122, Sunshine Coast is the 9th most populus in the country.  Approximately half the population of Gold Coast and a fifth of the crash frequency (comparison based on maximum bin).",
+      "camera": {
+      center: [153.066702,-26.650066],
+      bearing: 25.3,
+      zoom: 11.5
+      }
+      }, {
+      "id": "4",
+      "title": "Toowoomba",
+      "description": "Urban population of 135,631. Toowoomba, the second most populous inland city has developed into a a regional centre for buisness and goverment services. A peak of 1654 crashs in East Tooowoomba with Kitchner St,Margret St and James St highlighted as a hotspot.",
+      "camera": {
+      center: [151.949882, -27.566237],
+      bearing: 36,
+      zoom: 11.37
+      }
+      }, {
+      "id": "5",
+      "title": "Gold Coast",
+      "description": "66 kilometres south from Brisbane, with 570,000 population Gold coast is the sixth largest city. Pacific Motorway from Nerang to Upper Coomera having peaks 5 - 10 thousands crashes.",
+      "camera": {
+      center: [153.400106, -28.016886],
+      bearing: 28.4,
+      zoom: 11.64
+      }
+      }, {
+      "title": "Brisbane City",
+      "description": "The capital of Qld and third most populous city in Australia, 2.5 million. CBD shows highest cummulative total of 30,123 crashs and a trend on north, south motorway.",
+      "camera": {
+      center: [153.025331, -27.469821],
+      zoom: 9.68,
+      bearing: 0,
+      pitch: 0
+      }
+      }];
+
+
+
+      function playback(index) {
+      title.textContent = locations[index].title;
+      description.textContent = locations[index].description;
+
+      //highlightBorough(locations[index].id ? locations[index].id : '');
+
+      // Animate the map position based on camera properties
+      map.flyTo(locations[index].camera);
+
+      map.once('moveend', function() {
+      // Duration the slide is on screen after interaction
+      window.setTimeout(function() {
+      // Increment index
+      index = (index + 1 === locations.length) ? 0 : index + 1;
+      playback(index);
+    }, 5000); // After callback, show the location for 3 seconds.
+      });
+      }
+      playback(0);
+
+
+/*
+       });
+       map.flyTo({ center: [153.0177, -27.4],
+         zoom: 10,
+         speed: 0.1, // make the flying slow
+         curve: 2, // change the speed at which it zooms out
+       });
+
+*/
+
+
+    // Load data
+	  const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/heatmap-data.csv';
+
+    const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
+    const COLOR_RANGE = [
+      [1, 152, 189],
+      [73, 227, 206],
+      [216, 254, 181],
+      [254, 237, 177],
+      [254, 173, 84],
+      [209, 55, 78]
+    ];
+    const LIGHT_SETTINGS = {
+      lightsPosition: [-0.144528, 49.739968, 8000, -3.807751, 54.104682, 8000],
+      ambientRatio: 0.4,
+      diffuseRatio: 0.6,
+      specularRatio: 0.2,
+      lightsStrength: [0.8, 0.0, 0.8, 0.0],
+      numberOfLights: 2
+    };
+
+	<!-- Coverage = Hexagon radius multiplier, clamped between 0 - 1. The final radius of hexagon is calculated by coverage * radius. Note: coverage does not affect how points are binned. The radius of the bin is determined only by the radius property.-->
+	<!-- UpperPercentile = Filter bins and re-calculate color by upperPercentile. Hexagons with color value larger than the upperPercentile will be idden.-->
+
+    //DATA_URL = C:\Users\jaworra\Downloads\S3\TempVisualisation
+    //  heatmap-data.csv
+    //DATA_URL = 'C:\\Users\\jaworra\\Downloads\\S3\\TempVisualisation\\heatmap-data.csv';
+    //DATA_URL = 'heatmap-data.csv';
+
+    //var data2 = d3.csv.parseRows('heatmap-data.csv')
+
+
+    let hexagonLayer;
+    map.on('load', () => {
+      hexagonLayer = new MapboxLayer({
+        type: HexagonLayer,
+        id: 'heatmap',
+        data: d3.csv(DATA_URL),
+		    pickable: true,
+        radius: 700,
+        coverage: 0.5,
+        upperPercentile: 100,
+        colorRange: COLOR_RANGE,
+        elevationRange: [0, 1000],
+        elevationScale: 250,
+        extruded: true,
+        getPosition: d => [Number(d.lng), Number(d.lat)],
+        lightSettings: LIGHT_SETTINGS,
+        opacity: 0.6,
+    		autoHighlight: true,
+    		highlightColor: [255,255,0,250],
+    		pickable: true,
+    		onHover: onHover,
+		});
+
+      map.addLayer(hexagonLayer, 'waterway-label');
+    });
+
+    OPTIONS.forEach(key => {
+      document.getElementById(key).oninput = (evt) => {
+        const value = Number(evt.target.value);
+        document.getElementById(key + '-value').innerHTML = value;
+        if (hexagonLayer) {
+          hexagonLayer.setProps({[key]: value});
+        }
+      };
+    });
+
+	function onHover (info) {
+	  const {x, y, object} = info;
+	  if (object) {
+		tooltip.style.left = `${x}px`;
+		tooltip.style.top = `${y}px`;
+		tooltip.innerHTML = `${object.points.length} crash reports`;
+	  } else {
+		tooltip.innerHTML = '';
+	  }
+	}
+  </script>
+
+
+</html>
