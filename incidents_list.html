@@ -198,8 +198,8 @@ padding: 2px;
 
     <script type="text/javascript">
 
-//const DATA_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv'; //offline
-const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv';
+//const DATA_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents_dash.csv'; //prod
+const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv';  //dev
 
 //Table generation
           //d3.text("liveIncidentsDash.csv").then(function(data) {
@@ -281,7 +281,7 @@ const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveI
     var rdTime = ('0000' + (rounded.getHours() * 100 + rounded.getMinutes())).slice(-4);
     var file = rdTime +'.csv'  // unload this!!!
 
-    const STAT_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/stat/'+file;
+    const STAT_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/stat/'+file;  // Need to configure this.
     //const STAT_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/0800.csv';  // for offline
 
     d3.csv(STAT_URL).then(function(data) {
