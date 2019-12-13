@@ -342,13 +342,13 @@ var 	formatAsPercentage = d3.format("%"),
 
 //debug
 //Build data - Pie, Bar and Bar2 graph
-const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv'; //offline
-//const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/liveIncidentsDash.csv'; //online
+//const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv'; //dev
+const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents_dash.csv'; //prod
 d3.csv(DATA_URL, function(data) {
 console.log(data);
 
-	const DATA_URL_2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //offline
-	//const DATA_URL_2 = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/summarised_incidents.csv'; //online
+	//const DATA_URL_2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //dev
+	const DATA_URL_2 = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/summarised_incidents.csv'; //prod
 	d3.csv(DATA_URL_2, function(data2) {
 		//sets variables to int or string
 		data2.forEach(function(d) {
@@ -1458,8 +1458,8 @@ function updateLineChart(group, colorChosen) {
 
 
 /*   -- tables data
-const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv'; //offline
-//const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidentsDash.csv';
+const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv'; //offline
+//const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv';
 
 //Table generation
           d3.text(DATA_URL2).then(function(data) {

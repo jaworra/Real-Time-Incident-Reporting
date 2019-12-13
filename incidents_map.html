@@ -65,8 +65,9 @@
       zoom: 8.6, // should set the zoom extents based on the inputu coordinates.
     });
 
-    //const DATA_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/data/curated/liveIncidents.csv';
-    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidents.csv';  //live
+    //const DATA_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/live_incidents.csv'; //dev
+    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents.csv';  //prod
+
     const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
     const COLOR_RANGE = [
       [1, 152, 189],
