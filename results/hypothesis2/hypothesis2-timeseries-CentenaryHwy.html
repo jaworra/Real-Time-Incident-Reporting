@@ -1,0 +1,146 @@
+<title>Hypothesis 2</title>
+<center><h1>Streams Loops vs HERE flow api </h1></center>
+<head>
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+
+     
+  <div id="myDiv"><!-- Plotly chart will be drawn inside this DIV --></div>
+  <div id="myDiv2"><!-- Plotly chart will be drawn inside this DIV --></div>
+  <script>
+
+// makeplot function, taking 3 different timeseries and combines.
+function makeplot() {
+    Plotly.d3.csv("livelinks_streams_8484273.csv", function (err, data) {
+        function unpack(data, key) {
+            return data.map(function (row) { return row[key]; });
+        }
+    Plotly.d3.csv("livelinks_streams_8484287.csv", function (err, data2) {
+        function unpack(data2, key) {
+            return data2.map(function (row) { return row[key]; });
+        }        
+    Plotly.d3.csv("livelinks_here_31862.csv", function (err, data3) {
+        function unpack(data3, key) {
+            return data3.map(function (row) { return row[key]; });
+        }        
+        
+        var x1 = [], y1 = [];
+        var x2 = [], y2 = [];
+        var x3 = [], y3 = []; 
+
+        for (var i=0; i<data.length; i++) {
+            row = data[i];
+            x1.push( row['time'] );
+            y1.push( row['speed'] );
+        }
+
+        for (var i=0; i<data2.length; i++) {
+            row = data2[i];
+            x2.push( row['time'] );
+            y2.push( row['speed'] );
+        } 
+
+        for (var i=0; i<data3.length; i++) {
+            row = data3[i];
+            x3.push( row['time'] );
+            y3.push( row['speed'] );
+        }
+
+
+        var trace1 = [{
+        x: x1, 
+        y: y1,
+        name: "Loop: 8484273",
+        mode: 'lines',
+        }];
+
+        var trace2 = [{
+        x: x2, 
+        y: y2,
+        name: "Loop: 8484287",
+        mode: 'lines',
+        }];
+
+        var trace3 = [{
+        x: x3, 
+        y: y3,
+        name: "HERE: 31862",
+        mode: 'lines'
+        }];
+
+
+        var layout = {
+        title: 'Centenary Highway Speed Timeseries',
+        xaxis: {
+            title: 'Date Time',
+                },
+        yaxis: {
+            title: 'Speed (km)'
+                }
+			
+};
+
+    var AllData =[trace1[0], trace2[0], trace3[0]];			
+    Plotly.newPlot('myDiv', AllData, layout, {displayModeBar: true});
+
+
+}); 
+});
+});
+};
+
+makeplot();
+</script>
+
+<p>Works will commence in early-August 2019 and occur between 8pm and 5am, Sunday to Thursday, with the majority of work being on the road network. 
+<br /> - Out of hours works will also be undertaken across the site to reduce impacts to the road network and ensure the safety of workers. 
+<br /> - Speed will be reduced on Sumners Road to 40 kilometres per hour, and for both directions of the Centenary Motorway to 80 kilometres per hour in the active worksite areas. 
+<br /> - Traffic control and signage will be in place as required. Please allow for extra time when planning your journey. 
+<br /> - To ensure motorist and public safety, please follow all traffic and project related signage.
+<br /> Duration 11 Aug 2019 to 31 Dec 2021</p>
+
+<script>
+    
+var data = [{
+  type:'scattermapbox',
+  lat:['-27.555910'],
+  lon:['152.940246'],
+  mode:'markers',
+  marker: {
+    size:14
+  },
+  text:['Centenary Highway - Darra']
+}]
+
+
+
+
+var layout = {
+  autosize: true,
+  hovermode:'closest',
+  mapbox: {
+    bearing:0,
+    center: {
+      lat:-27.49991,   //location Centenary Highway - Darra
+      lon:152.94024
+    },
+    style:'dark',
+    pitch:0,
+    zoom:10
+  },
+}
+
+Plotly.setPlotConfig({
+  mapboxAccessToken: 'pk.eyJ1IjoiZXRwaW5hcmQiLCJhIjoiY2luMHIzdHE0MGFxNXVubTRxczZ2YmUxaCJ9.hwWZful0U2CQxit4ItNsiQ'
+})
+
+Plotly.plot('myDiv2', data, layout)
+
+
+</script>
+</body>
+
+
