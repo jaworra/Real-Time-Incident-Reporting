@@ -67,8 +67,8 @@
       zoom: 8.6, // should set the zoom extents based on the inputu coordinates.
     });
 
-    //const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents.csv'; //dev
-    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents.csv';  //prod
+    const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents.csv'; //dev
+    //const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents.csv';  //prod
 
     const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
     const COLOR_RANGE = [
@@ -92,8 +92,8 @@
 const myDeckLayer_priority = new MapboxLayer({
     id: 'my-scatterplot',
     type: ScatterplotLayer,
-    data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] != "No Blockage" ) { return d; }}),
-    opacity: 0.6,
+    data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] != "No Blockage" && d["blockageType"] != "Unknown") { return d; }}),
+    opacity: 1,
     stroked: true,
     radiusScale: 10,
     radiusMinPixels: 5,
@@ -112,7 +112,7 @@ const myDeckLayer_unknown = new MapboxLayer({
       id: 'newscatterplot',
       type: ScatterplotLayer,
       data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] == "Unknown") { return d; }}),
-      opacity: 0.8,
+      opacity: 0.6,
       stroked: true,
       radiusScale: 10,
       radiusMinPixels: 5,
@@ -124,8 +124,10 @@ const myDeckLayer_unknown = new MapboxLayer({
       onHover: onHover,
       getPosition: d => [Number(d.lng), Number(d.lat)],
       getLineColor: d => [0, 0, 0],
-      //getColor: d => [255, 127, 0]
-      getColor: d =>[255,70,0]
+      getColor: d => [211, 131, 6]
+      //getColor: d =>[255,80,0]
+      //getColor: d =>[169, 104, 2]
+      //getColor: d =>[168, 178, 190]
 
 });
 
