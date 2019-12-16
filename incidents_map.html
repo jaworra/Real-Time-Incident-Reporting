@@ -4,6 +4,8 @@
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
     <script src="https://unpkg.com/deck.gl@^6.2.0/deckgl.min.js"></script>
+
+
     <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
     <link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css">
     <script src="https://d3js.org/d3.v5.min.js"></script>
@@ -50,9 +52,9 @@
   addData();
 
   </script>
-
-
+    
   <script type="text/javascript">
+
 
 // Look int
 	mapboxgl.accessToken = 'pk.eyJ1IjoiamF3b3JyYSIsImEiOiJjanh6ZXBoZjQwMjlvM25wamN3eWw4aHowIn0.sfurxwTqAA9OqJr72WXjAg';
@@ -65,7 +67,7 @@
       zoom: 8.6, // should set the zoom extents based on the inputu coordinates.
     });
 
-    //const DATA_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/live_incidents.csv'; //dev
+    //const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents.csv'; //dev
     const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents.csv';  //prod
 
     const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
@@ -86,52 +88,72 @@
       numberOfLights: 2
     };
 
-
-	<!-- Coverage = Hexagon radius multiplier, clamped between 0 - 1. The final radius of hexagon is calculated by coverage * radius. Note: coverage does not affect how points are binned. The radius of the bin is determined only by the radius property.-->
-	<!-- UpperPercentile = Filter bins and re-calculate color by upperPercentile. Hexagons with color value larger than the upperPercentile will be idden.-->
-
 //Load base map - In progress data *priority
-const myDeckLayer_inProgress = new MapboxLayer({
+const myDeckLayer_priority = new MapboxLayer({
     id: 'my-scatterplot',
     type: ScatterplotLayer,
-    //data: d3.csv(DATA_URL),
-    data: d3.csv(DATA_URL, function(d) {if( d["status"] == "In Progress") { return d; }}),
-    //data: d3.json(DATA_URL2),
-    //getPosition: d => [d.coordinates[0],d.coordinates[1]],
+    data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] != "No Blockage" ) { return d; }}),
     opacity: 0.6,
+    stroked: true,
     radiusScale: 10,
     radiusMinPixels: 5,
     radiusMaxPixels: 50,
+    lineWidthMinPixels: 1,
     autoHighlight: true,
     highlightColor: [255,255,0,250],
     pickable: true,
     onHover: onHoverProgressd,
-    //onHover: ({object, x, y}) => {const tooltip = `${object.lng}\n${object.status}`;},
-    //onHover: ({object, x, y}) => {const tooltip =`${object.points.length} incident reports`;},
     getPosition: d => [Number(d.lng), Number(d.lat)],
+    getLineColor: d => [0, 0, 0],
     getColor: d => [255, 0, 0]
 });
 
-
-  const myDeckLayer_Compeleted = new MapboxLayer({
+const myDeckLayer_unknown = new MapboxLayer({
       id: 'newscatterplot',
       type: ScatterplotLayer,
-      data: d3.csv(DATA_URL, function(d) {if( d["status"] == "Completed") { return d; }}),
-      opacity: 0.2,
+      data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] == "Unknown") { return d; }}),
+      opacity: 0.8,
+      stroked: true,
       radiusScale: 10,
       radiusMinPixels: 5,
       radiusMaxPixels: 50,
+      lineWidthMinPixels: 1,
       autoHighlight: true,
       highlightColor: [255,255,0,250],
       pickable: true,
       onHover: onHover,
       getPosition: d => [Number(d.lng), Number(d.lat)],
-      getColor: d => [255,255,255]
-  });
+      getLineColor: d => [0, 0, 0],
+      //getColor: d => [255, 127, 0]
+      getColor: d =>[255,70,0]
+
+});
+
+const myDeckLayer_no_blockage = new MapboxLayer({
+      id: 'newscatterplot2',
+      type: ScatterplotLayer,
+      data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] == "No Blockage") { return d; }}),
+      opacity: 0.1,
+      stroked: true,
+      radiusScale: 10,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 50,
+      lineWidthMinPixels: 1,
+      autoHighlight: true,
+      highlightColor: [255,255,0,250],
+      pickable: true,
+      onHover: onHover,
+      getPosition: d => [Number(d.lng), Number(d.lat)],
+      getLineColor: d => [0, 0, 0],
+      getColor: d => [255, 127, 0]
+});
 
   	map.on('load', () => {
-    map.addLayer(myDeckLayer_inProgress);
-  	//map.addLayer(myDeckLayer_Compeleted);
+
+    map.addLayer(myDeckLayer_priority);
+  	map.addLayer(myDeckLayer_unknown);
+    map.addLayer(myDeckLayer_no_blockage);
+    
   	});
 
 //        OPTIONS.forEach(key => {
