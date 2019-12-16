@@ -3,7 +3,8 @@
 
 bucketname_routes="public-test-road"
 filepath_incidents_read="data/curated/live_incidents.csv"
-filepath_routes_write = r'live_incidents_priorites.csv'
+filepath_incidents_write = ="data/curated/live_incidents_priorites.csv"
+filepath_routes_HERE_write = "data/curated/here_links_flow_priority.json"
 
 #for HERE api
 app_id = ''
@@ -229,8 +230,7 @@ def lambda_handler(event, context):
                 h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]" % (str(row['name']),str(row['id']),str(row['jamF']),str(row['avSpeed']),str(row['cords'])))
                 
     s3 = boto3.resource('s3')
-    dev_bucketname_routes="public-test-road"
-    outbucket=s3.Bucket(dev_bucketname_routes)  
+    outbucket=s3.Bucket(bucketname_routes)  
     outbucket.upload_file("/tmp/temp.csv", "dev/linksflow.json") 
     
     #Program execuation time
