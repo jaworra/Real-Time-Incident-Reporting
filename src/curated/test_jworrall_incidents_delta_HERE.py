@@ -3,8 +3,8 @@
 
 bucketname_routes="public-test-road"
 filepath_incidents_read="data/curated/live_incidents.csv"
-filepath_incidents_write = ="data/curated/live_incidents_priorites.csv"
-filepath_routes_HERE_write = "data/curated/here_links_flow_priority.json"
+filepath_incidents_write = "data/curated/live_incidents_priorites.csv"
+filepath_routes_HERE_write= "data/curated/here_links_flow_priority.json"
 
 #for HERE api
 app_id = ''
@@ -24,7 +24,7 @@ import re
 import math
 #from datetime import datetime,date, timedelta
 
-from combineSets import current_waze, closes_pt, current_weather,current_holidays
+from combinesets import current_waze, closes_pt, current_weather,current_holidays
 from utmconversion import from_latlon
 
 #from athena import *
@@ -231,14 +231,11 @@ def lambda_handler(event, context):
                 
     s3 = boto3.resource('s3')
     outbucket=s3.Bucket(bucketname_routes)  
-    outbucket.upload_file("/tmp/temp.csv", "dev/linksflow.json") 
+    outbucket.upload_file("/tmp/temp.csv", filepath_routes_HERE_write) 
     
     #Program execuation time
     print("--- %s seconds ---" % (time.time() - startTime))
-    
 
-
-    #debug
     #date = '20190419' #known holiday
     #current date
     date=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
@@ -246,10 +243,10 @@ def lambda_handler(event, context):
     is_a_holiday, holiday_name = current_holidays(date)  
     
 
-    #refractor this for a function in combine sets
-    #loop through through each incidnet and for 'waze' affected routes.
+    #loop through through each incident and for 'waze' affected routes.
     waze_alert_list = current_waze()  #Produce list of waze incidents in qld
     #org_incCsv = org_incCsv[incCsv.blockageType == 'Blocked'] #only blocked - correlate  !!!write exception if no returs
+    
 
 
     #initialise
