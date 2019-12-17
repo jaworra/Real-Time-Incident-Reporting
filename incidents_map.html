@@ -88,6 +88,27 @@
       numberOfLights: 2
     };
 
+
+    const myDeckLayer_crashes = new MapboxLayer({
+      id: 'newscatterplot4',
+      type: ScatterplotLayer,
+      data: d3.csv(DATA_URL, function(d) {if( d["classification"] == "Primary Crash" ) { return d; }}), //|| d["classification"] != "Secondary Crash"
+      opacity: 0.1,
+      stroked: true,
+      radiusScale: 10,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 50,
+      lineWidthMinPixels: 10,
+      autoHighlight: true,
+      highlightColor: [255,255,0,250],
+      pickable: true,
+      onHover: onHover,
+      getPosition: d => [Number(d.lng), Number(d.lat)],
+      getLineColor: d => [255, 255, 255],
+      getColor: d => [255, 255, 255]
+});
+
+
 //Load base map - In progress data *priority
 const myDeckLayer_priority = new MapboxLayer({
     id: 'my-scatterplot',
@@ -150,11 +171,16 @@ const myDeckLayer_no_blockage = new MapboxLayer({
       getColor: d => [255, 127, 0]
 });
 
+
+
+
   	map.on('load', () => {
 
+    
     map.addLayer(myDeckLayer_priority);
   	map.addLayer(myDeckLayer_unknown);
     map.addLayer(myDeckLayer_no_blockage);
+    map.addLayer(myDeckLayer_crashes);
     
   	});
 
