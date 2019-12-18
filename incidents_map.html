@@ -88,11 +88,10 @@
       numberOfLights: 2
     };
 
-
     const myDeckLayer_crashes = new MapboxLayer({
       id: 'newscatterplot4',
       type: ScatterplotLayer,
-      data: d3.csv(DATA_URL, function(d) {if( d["classification"] == "Primary Crash" ) { return d; }}), //|| d["classification"] != "Secondary Crash"
+      data: d3.csv(DATA_URL, function(d) {if( d["classification"] == "Primary Crash" || d["classification"] == "Secondary Crash" ) { return d; }}), 
       opacity: 0.1,
       stroked: true,
       radiusScale: 10,
@@ -176,7 +175,6 @@ const myDeckLayer_no_blockage = new MapboxLayer({
 
   	map.on('load', () => {
 
-    
     map.addLayer(myDeckLayer_priority);
   	map.addLayer(myDeckLayer_unknown);
     map.addLayer(myDeckLayer_no_blockage);

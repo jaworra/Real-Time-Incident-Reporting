@@ -34,13 +34,33 @@ def closes_pt(pt_list_unsorted,p2):
 
     
 #library relating incidetns to outher streams of sources.
-
 def current_waze(): #Current waze incidents
 
     '''
     Check WAZE for incidents and return a list of current alerts 
+    3 types of events available in Event Feed:
+    – Alerts – Jams – Irregularities
 
+    Jams/Congestion (passively collected for users)
+    Alerts (actively submitted by users)
+    Irregularities - speeds on slower roads
+
+    Alerts sample
+    {'confidence': 0,
+    'country': 'AS',
+    'location': {'x': 153.097267, 'y': -26.675561},
+    'magvar': 144,
+    'nThumbsUp': 0,
+    'pubMillis': 1576639862000,
+    'reliability': 6,
+    'reportRating': 1,
+    'roadType': 3,
+    'street': 'SR70 - Sunshine Mtwy',
+    'subtype': 'HAZARD_ON_SHOULDER_CAR_STOPPED',
+    'type': 'WEATHERHAZARD',
+    'uuid': 'e9688542-2693-3a08-8199-78f4f8ed0251'}
     '''
+
     #Waze up session and payload to waze
     url = "https://world-georss.waze.com/rtserver/web/TGeoRSS?tk=ccp_partner&ccp_partner_name=Queensland&format=JSON&types=traffic,alerts,irregularities&polygon=138.010254,-16.261152;138.032227,-26.041052;140.976563,-26.021308;140.998535,-29.040863;154.291992,-29.194429;154.006348,-22.962503;142.492676,-9.626815;140.822754,-10.924000;138.010254,-16.261152;138.010254,-16.261152"
     session = requests.Session()
@@ -48,18 +68,23 @@ def current_waze(): #Current waze incidents
     waze_json = response.json()
 
     
-    #alerts_waze = returns a list of alerts from current waze
-    waze_loc_list = []
+    #create two waze list - 1) UTM coordinates 2) lat long coordinates with attributes 
+    #Only parse south east corridor
+    waze_SE_lat_long_with_attributes = []
+    waze_SE_utm = []
     for alerts in waze_json['alerts']:
         locations = alerts['location']
-        #waze_loc_list.append((locations['y'] ,locations['x']))
+        lon_temp = locations['x'] 
+        lat_temp  = locations['y']
         
-        #change from lat/long to MGA
-        limiteasting, limitnorthing, _ , _ = from_latlon(latitude=locations['y'] , longitude=locations['x'], force_zone_number=56)
-        waze_loc_list.append((limitnorthing , limiteasting))
+    if -28.2 <= lat_temp < -26 and 152 <= lon_temp < 154:  #South east corridor (north)-26.179091, 152.652139 (south) -28.192732, 153.527047
+        waze_SE_lat_long_with_attributes.append((lon_temp,lat_temp,alerts['type']))
 
-    return waze_loc_list
-    
+        #converstion to UTM
+        limiteasting, limitnorthing, _ , _ = from_latlon(latitude=lat_temp, longitude=lon_temp, force_zone_number=56)
+        waze_SE_utm.append((limitnorthing , limiteasting))
+
+    return waze_SE_utm,waze_SE_lat_long_with_attributes
     
 
 def current_holidays(date): #Current waze incidents
