@@ -77,12 +77,12 @@ def current_waze(): #Current waze incidents
         lon_temp = locations['x'] 
         lat_temp  = locations['y']
         
-    if -28.2 <= lat_temp < -26 and 152 <= lon_temp < 154:  #South east corridor (north)-26.179091, 152.652139 (south) -28.192732, 153.527047
-        waze_SE_lat_long_with_attributes.append((lon_temp,lat_temp,alerts['type']))
+        if -28.2 <= lat_temp < -26 and 152 <= lon_temp < 154:  #South east corridor (north)-26.179091, 152.652139 (south) -28.192732, 153.527047
+            waze_SE_lat_long_with_attributes.append((alerts['type'],lat_temp,lon_temp))
 
-        #converstion to UTM
-        limiteasting, limitnorthing, _ , _ = from_latlon(latitude=lat_temp, longitude=lon_temp, force_zone_number=56)
-        waze_SE_utm.append((limitnorthing , limiteasting))
+            #converstion to UTM
+            limiteasting, limitnorthing, _ , _ = from_latlon(latitude=lat_temp, longitude=lon_temp, force_zone_number=56)
+            waze_SE_utm.append((limitnorthing , limiteasting))
 
     return waze_SE_utm,waze_SE_lat_long_with_attributes
     

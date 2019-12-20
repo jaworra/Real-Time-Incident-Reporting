@@ -4,7 +4,9 @@
 bucketname_routes="public-test-road"
 filepath_incidents_read="data/curated/live_incidents.csv"
 filepath_incidents_write = "data/curated/live_incidents_priorites.csv"
+filepath_incidents_WAZE_write = "data/curated/live_waze_alerts.csv"
 filepath_routes_HERE_write= "data/curated/here_links_flow_priority.json"
+
 
 #for HERE api
 app_id = ''
@@ -230,26 +232,44 @@ def lambda_handler(event, context):
                 h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]" % (str(row['name']),str(row['id']),str(row['jamF']),str(row['avSpeed']),str(row['cords'])))
                 
     s3 = boto3.resource('s3')
-    outbucket=s3.Bucket(bucketname_routes)  
+    outbucket=s3.Bucket(bucketname_routes)
     outbucket.upload_file("/tmp/temp.csv", filepath_routes_HERE_write) 
     
     #Program execuation time
     print("--- %s seconds ---" % (time.time() - startTime))
-
+    
+    
+    #debug
     #date = '20190419' #known holiday
     #current date
     date=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     date = date.strftime('%Y%m%d')    
     is_a_holiday, holiday_name = current_holidays(date)  
     
-
-    #loop through through each incident and for 'waze' affected routes.
-    waze_alert_list = current_waze()  #Produce list of waze incidents in qld
-    #org_incCsv = org_incCsv[incCsv.blockageType == 'Blocked'] #only blocked - correlate  !!!write exception if no returs
     
+    #loop through through each incidnet and for 'waze' affected routes.
+    waze_alert_with_attributes =[]
+    waze_alert_list,waze_alert_with_attributes = current_waze()  #Produce list of waze incidents in qld
+    
+    
+    #waze_alert_with_attributes - gets sent out to s3
+    #waze_alert_list - for correlation with streams incident
+
+    #write out to S3 Bucket waze_alert_with_attributes
+    with open("/tmp/waze.csv", 'w') as h:
+        h.write('alert,lat,lng'+ '\n')
+        i = 1
+        size_of_list = len(waze_alert_with_attributes)
+        while i < size_of_list:
+            lineCsv = str(waze_alert_with_attributes[i][0])+','+str(waze_alert_with_attributes[i][1])+','+str(waze_alert_with_attributes[i][2]) + '\n'    
+            h.write(str(lineCsv))
+            i += 1
+            
+    s3 = boto3.resource('s3')
+    outbucket=s3.Bucket(bucketname_routes)
+    outbucket.upload_file("/tmp/waze.csv", filepath_incidents_WAZE_write) 
 
 
-    #initialise
 
     dfcols = ['id','lat','lng','status','blockageType','classification','loggedTime','wazeCorrelation','temp','weather','holiday']#,'weatherConditions']
     dfCorrelation = pd.DataFrame(columns = dfcols)
@@ -292,7 +312,7 @@ def lambda_handler(event, context):
         for index, row in dfCorrelation.iterrows():
             lineCsv = str(row['id'])+','+str(row['lat'])+','+str(row['lng'])+','+str(row['status'])+','+str(row['blockageType'])+','+str(row['classification'])+','+str(row['loggedTime'])+','+str(waze_proximity)+','+str(temperature)+','+str(weather)+','+str(is_a_holiday) + '\n'    
             h.write(str(lineCsv))
-    s3_client.upload_file(tmpfp,Bucket=bucketname_routes,Key=filepath_routes_write)
+    s3_client.upload_file(tmpfp,Bucket=bucketname_routes,Key=filepath_incidents_write)
                 
     return
 
