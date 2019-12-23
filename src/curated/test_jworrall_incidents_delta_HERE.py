@@ -248,7 +248,7 @@ def lambda_handler(event, context):
     
     
     #loop through through each incidnet and for 'waze' affected routes.
-    waze_alert_with_attributes =[]
+    waze_alert_with_attributes =[] #take this out -no need for initialisation?
     waze_alert_list,waze_alert_with_attributes = current_waze()  #Produce list of waze incidents in qld
     
     
