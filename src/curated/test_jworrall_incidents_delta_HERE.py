@@ -270,7 +270,6 @@ def lambda_handler(event, context):
     outbucket.upload_file("/tmp/waze.csv", filepath_incidents_WAZE_write) 
 
 
-
     dfcols = ['id','lat','lng','status','blockageType','classification','loggedTime','wazeCorrelation','temp','weather','holiday']#,'weatherConditions']
     dfCorrelation = pd.DataFrame(columns = dfcols)
     for index, row in org_incCsv.iterrows():
@@ -295,13 +294,8 @@ def lambda_handler(event, context):
         
         #build point data result values.
         #dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
-        
         dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['lat']),str(row['lng']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
 
-        
-        #output
-        #print "--------------"
-        #print dfCorrelation
         
     #Send out to S3
     session = boto3.Session()
