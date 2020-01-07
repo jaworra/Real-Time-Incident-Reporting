@@ -133,8 +133,8 @@ def changeCoordsStr(latLong):
 
 
 #Global Tokens
-app_id = 'Q56YtQZX205BCqVWB4UT'
-app_code = 'RkLmGtCor_WSh79Xg4egzA'
+app_id = ''
+app_code = ''
 
 def lambda_handler(event, context):
     
@@ -296,7 +296,7 @@ def lambda_handler(event, context):
         #dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
         dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['lat']),str(row['lng']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
 
-        
+
     #Send out to S3
     session = boto3.Session()
     s3_client = session.client('s3')
