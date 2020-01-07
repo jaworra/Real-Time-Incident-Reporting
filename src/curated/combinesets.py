@@ -1,5 +1,7 @@
-#    This function takes input from acciddents  (lat long) and relatest to other sources
-#    WAZE | BOM |  QPS etc ..
+#    This function takes input from acciddents  (lat long) and relatest to other API sources
+#    Feature Engineering combineing dataset 
+#    WAZE | BOM | WEATHER | ROADTECK
+#    Future works to include QPS
 
 import json
 import time

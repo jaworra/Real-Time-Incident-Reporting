@@ -1,6 +1,11 @@
 #John Worrall
 #Data Insights and solutions
-#Loads the incidents using transmax streams API
+#Loads the incidents using transmax streams API for Dashboard visualisation
+
+# Checks recent Incidents 'In progress', compares previously stored data returns delta
+# Relates the above to possible affected bus routes - checks RDS (postgres) stored bus routes
+# Write output in specific format for table/graphical object for end user dashboard (javascript libraries - D3/Deck.gl etc)
+# Update summary statistics on incidents frequency and other factors.
 
 ##TODO: Refractor code to funciton
 #      Optimise memory
@@ -245,7 +250,7 @@ def lambda_handler(event, context):
 #==================================Instead of rewrite====================================================================
 #if the bus not affected "None" else provide ID
 
-#look for unique value in dataframe 1 (Read csv) , then delete this record
+#look for unique value in dataframe 1 (Read csv), then delete this record
     s3 = boto3.client('s3')
     obj = s3.get_object(Bucket=bucket_name, Key=key_list_view)
     old_data = pd.read_csv(obj['Body'])

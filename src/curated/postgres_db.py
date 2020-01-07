@@ -1,6 +1,5 @@
 #Copied from master 4Apr19
 
-
 #Exports:
 # def open_database_connection_with_autocommit_off() #returns a DB-API connection you can pass to these routines or call .cursor() on
 # def execute_sql(sql,conn) #returns a cursor, will rollback the transaction on an exception. call conn.commit() if want to commit results!
