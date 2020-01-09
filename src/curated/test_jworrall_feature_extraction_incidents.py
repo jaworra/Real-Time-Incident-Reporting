@@ -1,20 +1,17 @@
-#Integerate HERE flow links with Streams Incidents
-#Understanding the impacts to the newtork due to an incident.
+#Feature extraction from available API
+
 
 # Based on location of incident ('In progres') return proximity HERE flow network
-# Check Waze correlated events
-# Output to dashboard - visualisation of high priorites areas. 
+# Save S3 location
 
 bucketname_routes="public-test-road"
 filepath_incidents_read="data/curated/live_incidents.csv"
-filepath_incidents_write = "data/curated/live_incidents_priorites.csv"
-filepath_incidents_WAZE_write = "data/curated/live_waze_alerts.csv"
-filepath_routes_HERE_write= "data/curated/here_links_flow_priority.json"
+filepath_incidents_write = "data/curated/feature_extraction_incidents.json"
 
 
-#for HERE api
-app_id = ''
-app_code = ''
+#for HERE api Global Tokens
+app_id = 'Q56YtQZX205BCqVWB4UT'
+app_code = 'RkLmGtCor_WSh79Xg4egzA'
 
 import json
 import datetime
@@ -30,7 +27,7 @@ import re
 import math
 #from datetime import datetime,date, timedelta
 
-from combinesets import current_waze, closes_pt, current_weather,current_holidays
+from combinesets import current_waze, closes_pt, current_weather,current_holidays,current_here_links_flow
 from utmconversion import from_latlon
 
 #from athena import *
@@ -101,6 +98,7 @@ def extrapackagesins3_load(): #copies a ZIP file of useful python packages from 
 #do now, at instance load
 extrapackagesins3_load() 
 
+
 #these imports are supported by 'extrapackagesins3_load'
 import csv
 import uuid
@@ -136,13 +134,9 @@ def changeCoordsStr(latLong):
     return cordsSwap
 
 
-#Global Tokens
-app_id = ''
-app_code = ''
-
 def lambda_handler(event, context):
     
-    
+      
     startTime = time.time() #Start Time
     
     #get incidents from S3 Bucket, only in progress.
@@ -162,11 +156,8 @@ def lambda_handler(event, context):
     5    16707056 -27.960379  153.345259  In Progress
     '''   
     
-    #overwrite the above
-    #incCsv = incCsv[incCsv.blockageType == 'Blocked']
     org_incCsv = org_incCsv[incCsv.blockageType == 'Blocked']   #FIX THIS UP LATER!!
-    incCsv=org_incCsv
-    
+    #incCsv=org_incCsv
     
     #refractor this for a function in combine sets
     #loop through through each incidnet and for 'HERE' affected routes.
@@ -175,12 +166,29 @@ def lambda_handler(event, context):
     j= 0 # debug - take out
     dfcols = ['id','name','avSpeed','jamF','cords']
     dfHere = pd.DataFrame(columns = dfcols)
+    
+    #test - first row to parse to funciton
+    incCsv = incCsv.iloc[0]
+    incidentCord = str(incCsv.lat) +  "," + str(incCsv.lng)
+    incidentId = str(incCsv.id)
+    print incidentCord
+    
+    
+    ### HERE - refractoring below to method current_here_links_flow*
+    ## need to look into paralle processing as can only send appx 10 incidents.
+    print current_here_links_flow(incidentId,incidentCord)
+    
+    
+    
+    
+    return
     for index, row in incCsv.iterrows():
         
         incidentCord = str(row['lat']) + "," + str(row['lng'])
         incidentId = str(row['id']) 
+        
+        temperature, weather = current_weather(str(row['lat']),str(row['lng']))
 
-        print incidentCord
         #### optimise - crashes 
         ### webpage for top 10 crashes and impacts on the network.
         j +=1
@@ -204,7 +212,7 @@ def lambda_handler(event, context):
 
         #break if no return
         if response !="": #only process return values
-
+            print 'enters - with a valide response'
             #process json return for output
             try:
                 r=json.loads(response)   
@@ -222,8 +230,13 @@ def lambda_handler(event, context):
                                         dfHere.loc[len(dfHere)] = [incidentId, linRd, flowInfoSpeed,flowInfoJam,cordStr]
             except Exception as ex:
                 print(str(response))
-                raise ex  
-
+                raise ex
+                
+    print incidentId  
+    print cordStr
+    print '---'
+    return
+    
     #Send out to S3
     geojson = "pathdata=["    
     tmpfp=r"/tmp/geojson" #we have 300MB of storage under /tmp
@@ -311,4 +324,6 @@ def lambda_handler(event, context):
                 
     return
 
+
+  
 
