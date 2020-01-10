@@ -10,8 +10,8 @@ filepath_incidents_write = "data/curated/feature_extraction_incidents.json"
 
 
 #for HERE api Global Tokens
-app_id = 'Q56YtQZX205BCqVWB4UT'
-app_code = 'RkLmGtCor_WSh79Xg4egzA'
+#app_id = 'Q56YtQZX205BCqVWB4UT'
+#app_code = 'RkLmGtCor_WSh79Xg4egzA'
 
 import json
 import datetime
@@ -156,8 +156,49 @@ def lambda_handler(event, context):
     5    16707056 -27.960379  153.345259  In Progress
     '''   
     
-    org_incCsv = org_incCsv[incCsv.blockageType == 'Blocked']   #FIX THIS UP LATER!!
-    #incCsv=org_incCsv
+    print incCsv
+    incCsv = org_incCsv[incCsv.blockageType == 'Unknown']   #FIX THIS UP LATER!!
+    #incCsv = incCsv.iloc[0]
+    
+    #print incCsv
+    incCsv_dict = incCsv.set_index('id').T.to_dict('list') #datarame to dictionary
+    
+    
+    here_prox = 100 #serach area around incident in meters
+    number_of_incidents = 2 #Of the number of incients serach k
+    here_flow_dict = current_here_links_flow(incCsv_dict,here_prox,number_of_incidents) #flow of here links,
+    print here_flow_dict
+    
+    for key, value in here_flow_dict.items():
+        print key
+        print value[0]
+        print value[1]
+        
+    
+    return
+    
+    
+    #Send out to S3
+    geojson = "pathdata=["    
+    tmpfp=r"/tmp/geojson" #we have 300MB of storage under /tmp
+    with open("/tmp/temp.csv", 'w') as h:
+        h.write("pathdata=[")
+        
+        
+        for i,(index, row) in enumerate(dfHere.iterrows()):
+            if i != len(dfHere) - 1:
+                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s},\n" % (str(row['name']),str(row['id']),str(row['jamF']),str(row['avSpeed']),str(row['cords'])))
+            else:
+                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]" % (str(row['name']),str(row['id']),str(row['jamF']),str(row['avSpeed']),str(row['cords'])))
+                
+    s3 = boto3.resource('s3')
+    outbucket=s3.Bucket(bucketname_routes)
+    outbucket.upload_file("/tmp/temp.csv", filepath_routes_HERE_write) 
+        
+    
+    
+    
+    return
     
     #refractor this for a function in combine sets
     #loop through through each incidnet and for 'HERE' affected routes.
@@ -168,26 +209,26 @@ def lambda_handler(event, context):
     dfHere = pd.DataFrame(columns = dfcols)
     
     #test - first row to parse to funciton
-    incCsv = incCsv.iloc[0]
+    #incCsv = incCsv.iloc[0]
     incidentCord = str(incCsv.lat) +  "," + str(incCsv.lng)
     incidentId = str(incCsv.id)
     print incidentCord
-    
+
+
+
+        
     
     ### HERE - refractoring below to method current_here_links_flow*
     ## need to look into paralle processing as can only send appx 10 incidents.
-    print current_here_links_flow(incidentId,incidentCord)
-    
-    
-    
+ 
+            
+    return
+
+    test1 = current_here_links_flow(incidentId,incidentCord)
+    print test1
     
     return
     for index, row in incCsv.iterrows():
-        
-        incidentCord = str(row['lat']) + "," + str(row['lng'])
-        incidentId = str(row['id']) 
-        
-        temperature, weather = current_weather(str(row['lat']),str(row['lng']))
 
         #### optimise - crashes 
         ### webpage for top 10 crashes and impacts on the network.
@@ -196,7 +237,17 @@ def lambda_handler(event, context):
         if j > 10: #limit - network error, investigate multiple API call
             break
         ###########
-         
+        
+        incidentCord = str(row['lat']) + "," + str(row['lng'])
+        incidentId = str(row['id']) 
+        
+        #get temperatures and weather condiditons
+        temperature, weather = current_weather(str(row['lat']),str(row['lng']))
+
+        #get here links
+        
+
+        
         #configure session request API
         starttime = time.time()
         urlsession = requests.session()
