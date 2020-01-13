@@ -1,10 +1,14 @@
-#    This function takes input from acciddents  (lat long) and relatest to other API sources
-#    Feature Engineering combineing dataset 
-#    WAZE | BOM | WEATHER | ROADTECK
-#    Future works to include QPS
+#    This function takes input from acciddents  (lat long) and relatest to other sources
+#    WAZE | BOM |  QPS | HERE etc ..
 
 import json
 import time
+
+
+#for HERE api Global Tokens
+app_id = ''
+app_code = ''
+
 
 try:
     from botocore.vendored import requests
@@ -16,6 +20,31 @@ from numpy import mean
 from math import sqrt    
 
 from utmconversion import from_latlon    
+
+
+
+
+def changeCoordsStr(latLong):
+    """
+    takes dictionary - change format from [lat,long] to [long,lat]
+    {'value': ['-28.14909,153.4798 -28.14903,153.4798 -28.14867,153.47978 -28.14825,153.47979 -28.14783,153.47982 -28.14718,153.47987 -28.14671,153.47987 '], 'FC': 1} to
+    '[153.4798,-28.14909],[153.4798,-28.14903],[153.47978,-28.14867],[153.47979,-28.14825],[153.47982,-28.14783],[153.47987,-28.14718],[153.47987,-28.14671]''   
+    """
+
+    tmpStr = str(latLong.get('value')).replace("'","")
+    tmpStr = tmpStr.replace(" -2","|-2").replace("[","").replace("]","").strip()
+
+    tmpStr= tmpStr.split("|")
+    cordsSwap="["
+    for index in range(len(tmpStr)):
+        lat, lon = tmpStr[index].split(",")
+        cordsSwap += "["+lon+","+lat+"],"
+    cordsSwap = cordsSwap[:-1]+"]" #remove the last character ',' and close ']'
+    cordsSwap = cordsSwap.replace("u","") #additional clean up in aws envirn
+    return cordsSwap
+
+
+
 
 #closes point from a list of points - optimised algorithm
 def closes_pt(pt_list_unsorted,p2):
@@ -33,15 +62,95 @@ def closes_pt(pt_list_unsorted,p2):
                 Best = p1, p2, dist
     return Best
     
-
     
-#library relating incidetns to outher streams of sources.
+    
+def current_here_links_flow(incCsv_dict, here_prox, number_of_incidents): #Current related here links 
+    '''function that takes coordinates from incidents and id
+    returns dictionary links
+    
+    Input:
+    incCsv_dict (Incident dictionary) - {16939653: [153.06776430000002, -27.65454102, 'In Progress', 'Unknown', 'None', '10:27:48 10-01-2020'], 
+    here_prox (Incident proximtey in meters) - 100
+    number_of_incidents (cut of due to priority and computation complexithy) - 3
+    
+    Output:
+    {'name': u'Beaudesert - Nerang Road', 'avSpeed': 30.66, 'jamF': 1.57294, 'cords': '[[153.33626,-27.98915],[153.33633,-27.98922],[153.33643,-27.9893],[153.3365,-27.98935]]', 'id': [153.333
+    
+    '''
+    
+    i=0
+    for key, value in incCsv_dict.items():
+        i +=1
+        #### optimise - crashes 
+        ### webpage for top 10 crashes and impacts on the network.        
+        if i > number_of_incidents: #limit - network error, investigate multiple API call
+            break       
+
+        incidentCord = str(value[1]) + "," + str(value[0])
+        incidentId = str(key)
+        
+        print '---ss'
+        print incidentId
+        
+        # print '222'
+        # print incidentId
+        # print '333'
+        # print incidentCord
+        # return
+        
+        
+        here_flow_dict = {'id': None, 'name': None, 'avSpeed': None , 'jamF': None, 'cords': None}
+             
+        #configure session request API
+        starttime = time.time()
+        urlsession = requests.session()
+        prox = "100"# "20" #proximity in metres 
+        #configure payload
+        url = "https://traffic.api.here.com/traffic/6.2/flow.json?app_id=" + app_id + "&app_code=" + app_code
+        url +="&prox="+incidentCord+","+prox+"&responseattributes=sh,fc"
+        
+        #send request
+        response = requests.get(url, timeout=600)    
+        response = response.content
+        #clean up
+        urlsession.close()
+    
+        #break if no return
+        if response !="": #only process return values
+    
+            #process json return for output
+            try:
+                r=json.loads(response)   
+                for el1 in r['RWS']:
+                    for el2 in el1['RW']:
+                            for el3 in el2['FIS']: #Road level
+                                for el4 in el3['FI']: #flow information extract here at link level
+                                    linRd = el4['TMC'].get('DE').replace("'","") #get rid of ' i.e "O'keefe Street" to "Okeefe Street"
+                                    #print(linRd)
+                                    flowInfoSpeed = el4['CF'][0].get('SU') #Speed (based on UNITS) not capped by speed limit
+                                    flowInfoJam = el4['CF'][0].get('JF') # The number between 0.0 and 10.0 indicating the expected quality of travel. When there is a road closure, the Jam Factor will be 10. As the number approaches 10.0 the quality of travel is getting worse. -1.0 indicates that a Jam Factor could not be calculated
+                                    flowInfoCon =  el4['CF'][0].get('CN') #Confidence, an indication of how the speed was determined. -1.0 road closed. 1.0=100% 0.7-100% Historical Usually a value between .7 and 1.0
+                                    for el5 in el4['SHP']: #get shape file
+                                        cordStr = changeCoordsStr(el5)
+                                        here_flow_dict.update({'id': incidentId, 'name': linRd, 'avSpeed': flowInfoSpeed , 'jamF': flowInfoJam, 'cords': cordStr})
+                                        #dfHere.loc[len(dfHere)] = [incidentId, linRd, flowInfoSpeed,flowInfoJam,cordStr]
+            except Exception as ex:
+                print(str(response))
+                raise ex  
+
+
+    ''' HERE -- not adding to dictionary - look at nested dict '''
+    print '6666'
+    print here_flow_dict
+    return here_flow_dict
+    
+
 def current_waze(): #Current waze incidents
 
     '''
     Check WAZE for incidents and return a list of current alerts 
-    3 types of events available in Event Feed:
-    – Alerts – Jams – Irregularities
+    3 types of events available in Event Feed
+    Alerts, Irregularities, Jams
 
     Jams/Congestion (passively collected for users)
     Alerts (actively submitted by users)
