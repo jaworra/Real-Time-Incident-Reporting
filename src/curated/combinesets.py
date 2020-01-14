@@ -10,6 +10,7 @@ app_id = ''
 app_code = ''
 
 
+
 try:
     from botocore.vendored import requests
 except ImportError: #have to get it in AWS Lambda from here instead
@@ -92,22 +93,15 @@ def current_here_links_flow(incCsv_dict, here_prox, number_of_incidents): #Curre
         print '---ss'
         print incidentId
         
-        # print '222'
-        # print incidentId
-        # print '333'
-        # print incidentCord
-        # return
-        
         
         here_flow_dict = {'id': None, 'name': None, 'avSpeed': None , 'jamF': None, 'cords': None}
              
         #configure session request API
         starttime = time.time()
         urlsession = requests.session()
-        prox = "100"# "20" #proximity in metres 
         #configure payload
         url = "https://traffic.api.here.com/traffic/6.2/flow.json?app_id=" + app_id + "&app_code=" + app_code
-        url +="&prox="+incidentCord+","+prox+"&responseattributes=sh,fc"
+        url +="&prox="+incidentCord+","+str(here_prox)+"&responseattributes=sh,fc"
         
         #send request
         response = requests.get(url, timeout=600)    
@@ -115,6 +109,7 @@ def current_here_links_flow(incCsv_dict, here_prox, number_of_incidents): #Curre
         #clean up
         urlsession.close()
     
+        z=1
         #break if no return
         if response !="": #only process return values
     
@@ -132,16 +127,16 @@ def current_here_links_flow(incCsv_dict, here_prox, number_of_incidents): #Curre
                                     flowInfoCon =  el4['CF'][0].get('CN') #Confidence, an indication of how the speed was determined. -1.0 road closed. 1.0=100% 0.7-100% Historical Usually a value between .7 and 1.0
                                     for el5 in el4['SHP']: #get shape file
                                         cordStr = changeCoordsStr(el5)
-                                        here_flow_dict.update({'id': incidentId, 'name': linRd, 'avSpeed': flowInfoSpeed , 'jamF': flowInfoJam, 'cords': cordStr})
+                                        here_flow_dict[z] = {'id': incidentId, 'name': linRd, 'avSpeed': flowInfoSpeed , 'jamF': flowInfoJam, 'cords': cordStr}
+                                        z+=1
                                         #dfHere.loc[len(dfHere)] = [incidentId, linRd, flowInfoSpeed,flowInfoJam,cordStr]
+
             except Exception as ex:
                 print(str(response))
                 raise ex  
 
-
-    ''' HERE -- not adding to dictionary - look at nested dict '''
-    print '6666'
-    print here_flow_dict
+    #print '6666'
+    #print here_flow_dict
     return here_flow_dict
     
 
