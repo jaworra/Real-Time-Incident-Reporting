@@ -156,7 +156,7 @@ def lambda_handler(event, context):
     5    16707056 -27.960379  153.345259  In Progress
     '''   
     
-    print incCsv
+    #print incCsv
     incCsv = org_incCsv[incCsv.blockageType == 'Unknown']   #FIX THIS UP LATER!!
     #incCsv = incCsv.iloc[0]
     
@@ -165,17 +165,45 @@ def lambda_handler(event, context):
     
     
     here_prox = 100 #serach area around incident in meters
-    number_of_incidents = 2 #Of the number of incients serach k
+    number_of_incidents = 3 #Of the number of incients serach k
+    
     here_flow_dict = current_here_links_flow(incCsv_dict,here_prox,number_of_incidents) #flow of here links,
-    print here_flow_dict
+
+    #HERE!!!
+    last_line = len(here_flow_dict)
+    last_line = last_line - 5 #bug here - go back 5 rows
+    print last_line
+    print here_flow_dict[last_line]
+
+    #Send out to S3
+    geojson = "pathdata=["    
+    tmpfp=r"/tmp/geojson" #we have 300MB of storage under /tmp
+    with open("/tmp/temp.csv", 'w') as h:
+        h.write("pathdata=[")
     
-    for key, value in here_flow_dict.items():
-        print key
-        print value[0]
-        print value[1]
-        
-    
-    return
+        for k in here_flow_dict:
+            here_link_str = here_flow_dict[k]
+            #print str(k)
+            if here_link_str is not None and k < last_line:
+                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s},\n" % (str(here_link_str['name']),str(here_link_str['id']),str(here_link_str['jamF']),str(here_link_str['avSpeed']),str(here_link_str['cords'])))
+                               
+                #name = str(temp_str['name'])
+                #print str(temp_str['avSpeed'])
+                #print str(temp_str['jamF'])
+                #print str(temp_str['cords'])
+                #print str(temp_str['name'])
+                #print str(temp_str['id'])
+                # print '**'
+                # print str(k)
+                # print '**'
+                # print temp_str
+            elif k == last_line:
+                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]\n" % (str(here_link_str['name']),str(here_link_str['id']),str(here_link_str['jamF']),str(here_link_str['avSpeed']),str(here_link_str['cords'])))
+                print '--------'
+                print here_link_str
+                print str(k)
+                print '---------'
+        return
     
     
     #Send out to S3

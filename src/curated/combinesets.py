@@ -137,6 +137,11 @@ def current_here_links_flow(incCsv_dict, here_prox, number_of_incidents): #Curre
 
     #print '6666'
     #print here_flow_dict
+    print '---end of program ---'
+    x=z-1
+    # print str(x)
+    print str(x)
+    print here_flow_dict[x] 
     return here_flow_dict
     
 
