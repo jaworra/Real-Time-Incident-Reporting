@@ -7,7 +7,7 @@
 bucketname_routes="public-test-road"
 filepath_incidents_read="data/curated/live_incidents.csv"
 filepath_incidents_write = "data/curated/feature_extraction_incidents.json"
-
+filepath_links_HERE_write = "data/curated/here_links_flow_priority_archive.json"
 
 #for HERE api Global Tokens
 #app_id = 'Q56YtQZX205BCqVWB4UT'
@@ -166,17 +166,14 @@ def lambda_handler(event, context):
     
     here_prox = 100 #serach area around incident in meters
     number_of_incidents = 3 #Of the number of incients serach k
-    
+
     here_flow_dict = current_here_links_flow(incCsv_dict,here_prox,number_of_incidents) #flow of here links,
 
-    #HERE!!!
+    #Retrun dictionary from methonds
     last_line = len(here_flow_dict)
-    last_line = last_line - 5 #bug here - go back 5 rows
-    print last_line
-    print here_flow_dict[last_line]
+    last_line = last_line - 5 #bug here - go back 5 rows (see current_here_links_flow method)
 
     #Send out to S3
-    geojson = "pathdata=["    
     tmpfp=r"/tmp/geojson" #we have 300MB of storage under /tmp
     with open("/tmp/temp.csv", 'w') as h:
         h.write("pathdata=[")
@@ -186,134 +183,16 @@ def lambda_handler(event, context):
             #print str(k)
             if here_link_str is not None and k < last_line:
                 h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s},\n" % (str(here_link_str['name']),str(here_link_str['id']),str(here_link_str['jamF']),str(here_link_str['avSpeed']),str(here_link_str['cords'])))
-                               
-                #name = str(temp_str['name'])
-                #print str(temp_str['avSpeed'])
-                #print str(temp_str['jamF'])
-                #print str(temp_str['cords'])
-                #print str(temp_str['name'])
-                #print str(temp_str['id'])
-                # print '**'
-                # print str(k)
-                # print '**'
-                # print temp_str
             elif k == last_line:
-                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]\n" % (str(here_link_str['name']),str(here_link_str['id']),str(here_link_str['jamF']),str(here_link_str['avSpeed']),str(here_link_str['cords'])))
-                print '--------'
-                print here_link_str
-                print str(k)
-                print '---------'
-        return
-    
-    
-    #Send out to S3
-    geojson = "pathdata=["    
-    tmpfp=r"/tmp/geojson" #we have 300MB of storage under /tmp
-    with open("/tmp/temp.csv", 'w') as h:
-        h.write("pathdata=[")
-        
-        
-        for i,(index, row) in enumerate(dfHere.iterrows()):
-            if i != len(dfHere) - 1:
-                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s},\n" % (str(row['name']),str(row['id']),str(row['jamF']),str(row['avSpeed']),str(row['cords'])))
-            else:
-                h.write("{route: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]" % (str(row['name']),str(row['id']),str(row['jamF']),str(row['avSpeed']),str(row['cords'])))
-                
+                h.write("{routeXXXXX: '%s',incident: %s,start_sam: 0,end_sam: 100000,jamF: %s,speed: '%s',coords: %s}]\n" % (str(here_link_str['name']),str(here_link_str['id']),str(here_link_str['jamF']),str(here_link_str['avSpeed']),str(here_link_str['cords'])))
+
     s3 = boto3.resource('s3')
     outbucket=s3.Bucket(bucketname_routes)
-    outbucket.upload_file("/tmp/temp.csv", filepath_routes_HERE_write) 
-        
-    
-    
-    
-    return
-    
-    #refractor this for a function in combine sets
-    #loop through through each incidnet and for 'HERE' affected routes.
-    #setup dataframe
-    i= 0
-    j= 0 # debug - take out
-    dfcols = ['id','name','avSpeed','jamF','cords']
-    dfHere = pd.DataFrame(columns = dfcols)
-    
-    #test - first row to parse to funciton
-    #incCsv = incCsv.iloc[0]
-    incidentCord = str(incCsv.lat) +  "," + str(incCsv.lng)
-    incidentId = str(incCsv.id)
-    print incidentCord
-
-
-
-        
-    
-    ### HERE - refractoring below to method current_here_links_flow*
-    ## need to look into paralle processing as can only send appx 10 incidents.
- 
-            
-    return
-
-    test1 = current_here_links_flow(incidentId,incidentCord)
-    print test1
-    
-    return
-    for index, row in incCsv.iterrows():
-
-        #### optimise - crashes 
-        ### webpage for top 10 crashes and impacts on the network.
-        j +=1
-        #print str(j) +' , ' + incidentCord
-        if j > 10: #limit - network error, investigate multiple API call
-            break
-        ###########
-        
-        incidentCord = str(row['lat']) + "," + str(row['lng'])
-        incidentId = str(row['id']) 
-        
-        #get temperatures and weather condiditons
-        temperature, weather = current_weather(str(row['lat']),str(row['lng']))
-
-        #get here links
-        
-
-        
-        #configure session request API
-        starttime = time.time()
-        urlsession = requests.session()
-        prox = "100"# "20" #proximity in metres 
-        #configure payload
-        url = "https://traffic.api.here.com/traffic/6.2/flow.json?app_id=" + app_id + "&app_code=" + app_code
-        url +="&prox="+incidentCord+","+prox+"&responseattributes=sh,fc"
-        #send request
-        response = requests.get(url, timeout=600)    
-        response = response.content
-        #clean up
-        urlsession.close()
-
-        #break if no return
-        if response !="": #only process return values
-            print 'enters - with a valide response'
-            #process json return for output
-            try:
-                r=json.loads(response)   
-                for el1 in r['RWS']:
-                    for el2 in el1['RW']:
-                            for el3 in el2['FIS']: #Road level
-                                for el4 in el3['FI']: #flow information extract here at link level
-                                    linRd = el4['TMC'].get('DE').replace("'","") #get rid of ' i.e "O'keefe Street" to "Okeefe Street"
-                                    #print(linRd)
-                                    flowInfoSpeed = el4['CF'][0].get('SU') #Speed (based on UNITS) not capped by speed limit
-                                    flowInfoJam = el4['CF'][0].get('JF') # The number between 0.0 and 10.0 indicating the expected quality of travel. When there is a road closure, the Jam Factor will be 10. As the number approaches 10.0 the quality of travel is getting worse. -1.0 indicates that a Jam Factor could not be calculated
-                                    flowInfoCon =  el4['CF'][0].get('CN') #Confidence, an indication of how the speed was determined. -1.0 road closed. 1.0=100% 0.7-100% Historical Usually a value between .7 and 1.0
-                                    for el5 in el4['SHP']: #get shape file
-                                        cordStr = changeCoordsStr(el5)
-                                        dfHere.loc[len(dfHere)] = [incidentId, linRd, flowInfoSpeed,flowInfoJam,cordStr]
-            except Exception as ex:
-                print(str(response))
-                raise ex
-                
-    print incidentId  
-    print cordStr
-    print '---'
+    outbucket.upload_file("/tmp/temp.csv", filepath_links_HERE_write) 
+     
+     
+    #Send out link?           
+    print 'sent outs'
     return
     
     #Send out to S3
