@@ -161,8 +161,7 @@ def lambda_handler(event, context):
     #incCsv = incCsv.iloc[0]
     
     #print incCsv
-    incCsv_dict = incCsv.set_index('id').T.to_dict('list') #datarame to dictionary
-    
+    incCsv_dict = incCsv.set_index('id').T.to_dict('list') #dataframe to dictionary
     
     here_prox = 100 #serach area around incident in meters
     number_of_incidents = 3 #Of the number of incients serach k
@@ -193,7 +192,6 @@ def lambda_handler(event, context):
      
     #Send out link?           
     print 'sent outs'
-    return
     
     #Send out to S3
     geojson = "pathdata=["    
