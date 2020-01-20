@@ -1,17 +1,17 @@
 #Feature extraction from available API
-
-
 # Based on location of incident ('In progres') return proximity HERE flow network
+# Call once a day to check for incidents and related variables 
 # Save S3 location
 
+#global variables 
 bucketname_routes="public-test-road"
 filepath_incidents_read="data/curated/live_incidents.csv"
 filepath_incidents_write = "data/curated/feature_extraction_incidents.json"
 filepath_links_HERE_write = "data/curated/here_links_flow_priority_archive.json"
 
 #for HERE api Global Tokens
-#app_id = 'Q56YtQZX205BCqVWB4UT'
-#app_code = 'RkLmGtCor_WSh79Xg4egzA'
+#app_id = ''
+#app_code = ''
 
 import json
 import datetime
@@ -222,6 +222,7 @@ def lambda_handler(event, context):
     waze_alert_with_attributes =[] #take this out -no need for initialisation?
     waze_alert_list,waze_alert_with_attributes = current_waze()  #Produce list of waze incidents in qld
     
+    ###---
     #waze_alert_with_attributes - gets sent out to s3
     #waze_alert_list - for correlation with streams incident
 
