@@ -31,6 +31,7 @@ bucket_name= 'public-test-road'
 key_dashboard = 'data/curated/summarised_incidents.csv'
 key_list_view = 'data/curated/live_incidents_dash.csv' 
 key_map_view = 'data/curated/live_incidents.csv'
+key_raw_sims = 'data/raw/Incidents_sims.json'
 
 from postgres_db import *
 
@@ -175,7 +176,7 @@ def lambda_handler(event, context):
 
     # Send out json if required
     # s3 = boto3.resource('s3')
-    # s3object = s3.Object(bucket_name,'data/raw/Incidents_sims.json')
+    # s3object = s3.Object(bucket_name,key_raw_sims)
     # s3object.put(Body=(bytes(json.dumps(jdata).encode('UTF-8'))))
     
     #set current date and yesterday
