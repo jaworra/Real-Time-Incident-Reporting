@@ -172,6 +172,11 @@ def lambda_handler(event, context):
     response = requests.get(ser_SIMSRecent,params=payload_ser_SIMSRecent, headers=headers_txt, timeout=600)
     jdata= response.json()        
     #data = response.content
+
+    # Send out json if required
+    # s3 = boto3.resource('s3')
+    # s3object = s3.Object(bucket_name,'data/raw/Incidents_sims.json')
+    # s3object.put(Body=(bytes(json.dumps(jdata).encode('UTF-8'))))
     
     #set current date and yesterday
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
