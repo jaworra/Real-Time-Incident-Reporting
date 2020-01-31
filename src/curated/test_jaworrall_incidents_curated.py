@@ -12,12 +12,6 @@
 
 #secrets
 app_id = ''
-# #Chenage the below details to reader!!!
-# db_host=''
-# db_port=
-# db_name=''
-# db_user=''
-# db_password=''
 
 #below is the readonly replica
 db_port=

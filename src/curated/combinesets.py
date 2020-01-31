@@ -93,7 +93,6 @@ def current_here_links_flow(incCsv_dict, here_prox, number_of_incidents): #Curre
         print '---ss'
         print incidentId
         
-        
         here_flow_dict = {'id': None, 'name': None, 'avSpeed': None , 'jamF': None, 'cords': None}
              
         #configure session request API
@@ -344,9 +343,11 @@ def current_roadtek_vehicles():
 def current_weather(latitude, longitude):
     
     #weather session and payload
-    api_key = "d1741b0c4ca70aeb629424a1ddcf28a1"
+    #api_key = "d1741b0c4ca70aeb629424a1ddcf28a1"
+    api_key = "a702fc7ad1caec9619d26cda222bb5ef"
     getParameters = {'appid':api_key}
-        
+
+    
     openweather_url = "https://api.openweathermap.org/data/2.5/weather"
     openweather_url += "?lat="+latitude+"&lon="+longitude
     openweather_url += "&units=metric"
