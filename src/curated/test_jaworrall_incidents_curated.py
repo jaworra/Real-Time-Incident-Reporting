@@ -504,6 +504,7 @@ def lambda_handler(event, context):
                     lineCsv = str(row['Date'])+"," +str(row['Weekday'])+","+str(row['IncidentCount'])+","+str(row['CrashCount'])+'\n'
                     f.write(lineCsv)
             s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key) 
+            s3_client.upload_file(tmNew,Bucket=bucket_name,Key="stat/bytime/HHMM_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv")
             print csvdf
     #return    
     
