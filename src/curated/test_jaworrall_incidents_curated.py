@@ -503,9 +503,9 @@ def lambda_handler(event, context):
                 for index, row in csvdf.iterrows():
                     lineCsv = str(row['Date'])+"," +str(row['Weekday'])+","+str(row['IncidentCount'])+","+str(row['CrashCount'])+'\n'
                     f.write(lineCsv)
-            s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key) 
-            s3_client.upload_file(tmNew,Bucket=bucket_name,Key="stat/bytime/HHMM_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv")
-            print csvdf
+            s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key) #remove this in 24 hours!!
+            s3_client.upload_file(tmNew,Bucket=bucket_name,Key="stat/bytime/hhmm_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv")
+            print 'saved stats in partition s3 file'
     #return    
     
 #=======================================================================================================

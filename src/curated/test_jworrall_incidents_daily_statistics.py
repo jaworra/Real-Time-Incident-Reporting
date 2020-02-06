@@ -1,4 +1,5 @@
-#Feature extraction from available API
+#Statitcs of sims perfomance for dashboard metrics
+# i.e 24 hour period of historical incidents by 15mins stats.
 
 
 # Based on location of incident ('In progres') return proximity HERE flow network
@@ -43,12 +44,31 @@ def lambda_handler(event, context):
     print dayOfWeek
     
     #if holiday - Store Holiday
-
 #------------------ run athena queries -----------------------
     #send to athena and query all csvs
-    
-    #table in below athena db
+
+
+
+
     '''
+    CREATE EXTERNAL TABLE IF NOT EXISTS incidents.daily_summaries_dashboard (
+    `date` string,
+    `weekday` string,
+    `incidentcount` int,
+    `crashcount` int 
+    ) PARTITIONED BY (
+    `hhmm_utcplus10` string 
+    )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+    WITH SERDEPROPERTIES (
+    'serialization.format' = ',',
+    'field.delim' = ','
+    ) LOCATION 's3://public-test-road/stat/bytime/'
+    TBLPROPERTIES ('has_encrypted_data'='false',
+                   'skip.header.line.count'='1');
+
+
+    #table in below athena db
     CREATE EXTERNAL TABLE IF NOT EXISTS historic_incidents_db.daily_summaries_partition(
       `date` string,
       `weekday` string,
