@@ -15,8 +15,7 @@ S3_OUTPUT = 's3://public-test-road/stat/qry'
 S3_BUCKET = 'qry'
 # number of retries
 RETRY_COUNT = 5
-# query constant
-COLUMN = 'weekday'    
+
 
 
 import time
@@ -35,7 +34,7 @@ def lambda_handler(event, context):
     #set current date and yesterday
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     today = datetime.datetime.strftime(dt,"%Y%m%d") #string today
-    dayOfWeek = dt.today().strftime('%A')
+    day_of_week = dt.today().strftime('%A')
 
 
     #if holiday - Store Holiday
@@ -61,6 +60,7 @@ def lambda_handler(event, context):
     TBLPROPERTIES ('has_encrypted_data'='false')
     '''
     
+    #anthena query
     '''
     # daily stats
     SELECT weekday, hhmm_utcplus10,
@@ -74,17 +74,26 @@ def lambda_handler(event, context):
     
     '''
     
-    keyword = dayOfWeek
-    #query = "SELECT * FROM %s.%s where %s = '%s';" % (DATABASE, TABLE, COLUMN, keyword) #simple query
-    query = "SELECT weekday, hhmm_utcplus10, FROM %s.%s where %s = '%s';" % (DATABASE, TABLE, COLUMN, keyword) #stat query
+    #build above athena query
+    #query = "SELECT * FROM %s.%s where %s = '%s';" % (DATABASE, TABLE, col_wkday, keyword) #simple query (test)
+    col_wkday = 'weekday'    
+    col_inc = 'incidentcount' 
+    col_hm = 'hhmm_utcplus10' 
     
+    query = "SELECT %s,%s," \
+            "min (%s) as minimum_incidents," \
+            "approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+            "AVG (%s) as average_incidents," \
+            "approx_percentile(%s, 0.75) as appx_Q3_incidents," \
+            "max (%s) as maximum_incidents " \
+            "FROM %s.%s where %s = '%s' " \
+            "GROUP BY %s,%s ORDER BY %s ASC;" \
+            % (col_wkday, col_hm, col_inc,col_inc,col_inc,col_inc,col_inc, DATABASE, TABLE, col_wkday, day_of_week,col_wkday,col_hm,col_hm) #stat query
     
 
-
-    
+    #query and save to s3
     # athena client
     client = boto3.client('athena')
-
     # Execution
     response = client.start_query_execution(
         QueryString=query,
@@ -96,12 +105,11 @@ def lambda_handler(event, context):
         }
     )
     
-    # get query execution id
+
+    #get query execution id
     query_execution_id = response['QueryExecutionId']
-    print(query_execution_id)
-    
- 
-  # get execution status
+
+    # get execution status
     for i in range(1, 1 + RETRY_COUNT):
 
         # get query execution
@@ -126,17 +134,15 @@ def lambda_handler(event, context):
     # get query results
     result = client.get_query_results(QueryExecutionId=query_execution_id)
     print(result)
+    print '---------'
+    return
 
     # get data
     if len(result['ResultSet']['Rows']) == 2:
-
         email = result['ResultSet']['Rows'][1]['Data'][1]['VarCharValue']
-
         return email
-
     else:
         return None
- 
     return
         
 #------------------ iterate through csv -----------------------
