@@ -1,5 +1,4 @@
-#Statitcs of sims perfomance for dashboard metrics
-# i.e 24 hour period of historical incidents by 15mins stats.
+#Feature extraction from available API
 
 
 # Based on location of incident ('In progres') return proximity HERE flow network
@@ -9,8 +8,8 @@ filepath_incidents_read_prefix_key="stat/"
 filepath_incidents_statistic_write = "public-test-road/stat/"
 
 # Athena parametres
-DATABASE = 'historic_incidents_db'
-TABLE = 'daily_summaries_partition'
+DATABASE = 'incidents'
+TABLE = 'daily_summaries_dashboard'
 # S3 constant
 S3_OUTPUT = 's3://public-test-road/stat/qry'
 S3_BUCKET = 'qry'
@@ -33,42 +32,19 @@ import json
 
 def lambda_handler(event, context):
   
-  
-    
     #set current date and yesterday
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     today = datetime.datetime.strftime(dt,"%Y%m%d") #string today
     dayOfWeek = dt.today().strftime('%A')
 
-    print today
-    print dayOfWeek
-    
+
     #if holiday - Store Holiday
+
 #------------------ run athena queries -----------------------
     #send to athena and query all csvs
-
-
-
-
+    
+    #create table if required below athena db
     '''
-    CREATE EXTERNAL TABLE IF NOT EXISTS incidents.daily_summaries_dashboard (
-    `date` string,
-    `weekday` string,
-    `incidentcount` int,
-    `crashcount` int 
-    ) PARTITIONED BY (
-    `hhmm_utcplus10` string 
-    )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
-    WITH SERDEPROPERTIES (
-    'serialization.format' = ',',
-    'field.delim' = ','
-    ) LOCATION 's3://public-test-road/stat/bytime/'
-    TBLPROPERTIES ('has_encrypted_data'='false',
-                   'skip.header.line.count'='1');
-
-
-    #table in below athena db
     CREATE EXTERNAL TABLE IF NOT EXISTS historic_incidents_db.daily_summaries_partition(
       `date` string,
       `weekday` string,
@@ -85,61 +61,26 @@ def lambda_handler(event, context):
     TBLPROPERTIES ('has_encrypted_data'='false')
     '''
     
+    '''
+    # daily stats
+    SELECT weekday, hhmm_utcplus10,
+    min (incidentcount) as "minimum_incidents",
+    approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+    AVG (incidentcount) as "average_incidents",
+    approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+    max (incidentcount) as "maximum_incidents"
+    FROM "incidents"."daily_summaries_dashboard" where weekday = 'Monday' 
+    GROUP BY weekday,hhmm_utcplus10 ORDER BY hhmm_utcplus10 ASC
     
-    #approx_percentile(traveltime_minutes, 0.00) as "percentile_000",
+    '''
     
-    
-    
-    #https://dev.classmethod.jp/cloud/run-amazon-athenas-query-with-aws-lambda/
-    # get keyword
-    #keyword = event['name']
     keyword = dayOfWeek
+    #query = "SELECT * FROM %s.%s where %s = '%s';" % (DATABASE, TABLE, COLUMN, keyword) #simple query
+    query = "SELECT weekday, hhmm_utcplus10, FROM %s.%s where %s = '%s';" % (DATABASE, TABLE, COLUMN, keyword) #stat query
     
     
-    # created query
-    query = "SELECT * FROM %s.%s where %s = '%s';" % (DATABASE, TABLE, COLUMN, keyword)
-    #SELECT * FROM "historic_incidents_db"."daily_summaries" where weekday = 'Friday' limit 100;
-    #SELECT * FROM "historic_incidents_db"."daily_summaries" limit 100;
-    
-    COLUMN2 = "yymmdd_utcplus10"
-    keyword = "1600"
-    keyword
-    #SELECT * FROM "historic_incidents_db"."daily_summaries_partition" where yymmdd_utcplus10='1600' and date = '20200131' limit 10
-    query = "SELECT * FROM %s.%s where %s = '%s' and ;" % (DATABASE, TABLE, COLUMN2, keyword)
-    
-    #run sql to bring back only the last day.
-    #SELECT * FROM "historic_incidents_db"."daily_summaries_partition" where weekday = 'Friday'
-    #SELECT weekday, AVG (incidentcount) FROM "historic_incidents_db"."daily_summaries_partition" where weekday = 'Friday' GROUP BY weekday,yymmdd_utcplus10;
-    #approx_percentile(traveltime_minutes, 0.00) as "percentile_000",
-    
-    '''
-    SELECT weekday, AVG (incidentcount) as "average_incidents",
-                    AVG (crashcount) as "average_crashes",
-                    yymmdd_utcplus10
-                    FROM "historic_incidents_db"."daily_summaries_partition" where weekday = 'Monday' 
-                    GROUP BY weekday,yymmdd_utcplus10 ORDER BY yymmdd_utcplus10 ASC
-                    
-                    
-    SELECT weekday, AVG (incidentcount) as "average_incidents",
-                    approx_percentile(incidentcount, 0.50) as "percentile_050 check",
-                    AVG (crashcount) as "average_crashes",                
-                    yymmdd_utcplus10
-                    FROM "historic_incidents_db"."daily_summaries_partition" where weekday = 'Monday' 
-                    GROUP BY weekday,yymmdd_utcplus10 ORDER BY yymmdd_utcplus10 ASC
-                    
-                    
-    SELECT weekday, min (incidentcount) as "minimum_incidents",
-                approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
-                AVG (incidentcount) as "average_incidents",
-                approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
-                max (incidentcount) as "maximum_incidents",       
-                yymmdd_utcplus10
-                FROM "historic_incidents_db"."daily_summaries_partition" where weekday = 'Monday' 
-                GROUP BY weekday,yymmdd_utcplus10 ORDER BY yymmdd_utcplus10 ASC
-                    
-    '''
-    
-    #do a count in query 
+
+
     
     # athena client
     client = boto3.client('athena')
