@@ -1,5 +1,6 @@
 #Feature extraction from available API
 
+#todo: refractor and excpetions methods for athena methods(e.g def athena_qry)
 
 # Based on location of incident ('In progres') return proximity HERE flow network
 # Save S3 location
@@ -10,16 +11,14 @@ filepath_incidents_statistic_write = "public-test-road/stat/"
 # Athena parametres
 DATABASE = 'incidents'
 TABLE = 'daily_summaries_dashboard'
-# S3 constant
 S3_OUTPUT = 's3://public-test-road/stat/qry'
 S3_BUCKET = 'qry'
 # number of retries
 RETRY_COUNT = 5
 
-
-
 import time
 import boto3
+import logging
 import json
 import datetime
 from datetime import date, timedelta
@@ -29,12 +28,13 @@ import urllib2
 import json
 
 
+
 def lambda_handler(event, context):
   
     #set current date and yesterday
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
-    today = datetime.datetime.strftime(dt,"%Y%m%d") #string today
-    day_of_week = dt.today().strftime('%A')
+    today = datetime.datetime.strftime(dt,"%Y%m%d") #string yyyymmdd
+    day_of_week = dt.strftime('%A')
 
 
     #if holiday - Store Holiday
@@ -93,6 +93,8 @@ def lambda_handler(event, context):
 
     #query and save to s3
     # athena client
+    logging.basicConfig(filename='athena.log',level=logging.INFO)
+    
     client = boto3.client('athena')
     # Execution
     response = client.start_query_execution(
@@ -105,11 +107,11 @@ def lambda_handler(event, context):
         }
     )
     
-
-    #get query execution id
+    #get query execution id - kdy in s3
     query_execution_id = response['QueryExecutionId']
 
-    # get execution status
+    # get execution status - awating succesfull response
+    # todo: rewrite below to wait based on time rather than current loop 
     for i in range(1, 1 + RETRY_COUNT):
 
         # get query execution
@@ -130,21 +132,24 @@ def lambda_handler(event, context):
         client.stop_query_execution(QueryExecutionId=query_execution_id)
         raise Exception('TIME OVER')
  
- 
     # get query results
     result = client.get_query_results(QueryExecutionId=query_execution_id)
-    print(result)
-    print '---------'
-    return
+    print query_execution_id
 
     # get data
+    
+    
+    #print result
+    print len(result['ResultSet']['Rows'])
+
+    #using id move csv file to S3 curated bucket for typical weekday and weekend
     if len(result['ResultSet']['Rows']) == 2:
         email = result['ResultSet']['Rows'][1]['Data'][1]['VarCharValue']
-        return email
+        print email
     else:
         return None
-    return
-        
+    print '-----'
+    
 #------------------ iterate through csv -----------------------
     #get incidents from S3 Bucket, only in progress.
     s3 = boto3.resource('s3')
