@@ -1,6 +1,7 @@
 #Feature extraction from available API
 
-#todo: refractor and excpetions methods for athena methods(e.g def athena_qry)
+#todo: 1) refactor holiday and next 24 hour result
+#      2) cloud wat     
 
 # Based on location of incident ('In progres') return proximity HERE flow network
 # Save S3 location
@@ -18,30 +19,85 @@ RETRY_COUNT = 5
 
 import time
 import boto3
-import logging
 import json
 import datetime
 from datetime import date, timedelta
-
 from botocore.vendored import requests
 import urllib2
 import json
 
 
 
-def lambda_handler(event, context):
-  
+def athena_next_24_hrs_past_24_hrs():
+    '''
+    create a rolling 48hour window for dashboard statistics every 24hours
+    
+    '''
+    #set current date 
+    dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
+    today = datetime.datetime.strftime(dt,"%Y%m%d") #string yyyymmdd
+    day_of_week = dt.strftime('%A')
+    
+    #set tomorrows date 
+    dt_24hours=dt + datetime.timedelta(hours=24) #24 hour previous 
+    tomorrows_day_of_week = dt_24hours.strftime('%A')
+    
+    print day_of_week
+    print tomorrows_day_of_week
+    
+    return
+
+
+    '''
+SELECT weekday, hhmm_utcplus10, 1 as select_order,
+    min (incidentcount) as "minimum_incidents",
+    approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+    AVG (incidentcount) as "average_incidents",
+    approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+    max (incidentcount) as "maximum_incidents"
+    FROM "incidents"."daily_summaries_dashboard" where weekday = 'Monday' 
+    GROUP BY weekday,hhmm_utcplus10
+    UNION 
+SELECT weekday, hhmm_utcplus10, 2 as select_order,
+    min (incidentcount) as "minimum_incidents",
+    approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+    AVG (incidentcount) as "average_incidents",
+    approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+    max (incidentcount) as "maximum_incidents"
+    FROM "incidents"."daily_summaries_dashboard" where weekday = 'Tuesday' 
+    GROUP BY weekday,hhmm_utcplus10 Order by select_order,hhmm_utcplus10
+    '''
+    
+    
+    
+    
+
+
+def athena_typical_day_qry():
+    '''
+    create typical day metricsfrom partiioned csv files use athena to query every 24 hours
+    to calcuate statistics of incidents assumes table setup in athena
+    
+    sample output
+    weekday	hhmm_utcplus10	minimum_incidents	appx_Q1_incidents	average_incidents	appx_Q3_incidents	maximum_incidents
+    Wednesday	0	36	49	58.55	68	89
+    Wednesday	15	36	49	57.9	66	90
+    Wednesday	30	41	52	59.22222222	63	91
+    Wednesday	45	40	49	57.23529412	61	89
+    Wednesday	100	38	48	56.14285714	60	86
+
+    '''
+ 
     #set current date and yesterday
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     today = datetime.datetime.strftime(dt,"%Y%m%d") #string yyyymmdd
     day_of_week = dt.strftime('%A')
-
-
-    #if holiday - Store Holiday
-
-#------------------ run athena queries -----------------------
-    #send to athena and query all csvs
     
+    #Need to do qa check at 9ma the following code returns the right day (update lambda test_jworrall_incidents_current_delta line 455)
+    #print dt.today().strftime('%A')
+
+    #------------------ run athena queries -----------------------
+    #send to athena and query all csvs
     #create table if required below athena db
     '''
     CREATE EXTERNAL TABLE IF NOT EXISTS historic_incidents_db.daily_summaries_partition(
@@ -92,9 +148,7 @@ def lambda_handler(event, context):
     
 
     #query and save to s3
-    # athena client
-    logging.basicConfig(filename='athena.log',level=logging.INFO)
-    
+    # athena client 
     client = boto3.client('athena')
     # Execution
     response = client.start_query_execution(
@@ -110,8 +164,7 @@ def lambda_handler(event, context):
     #get query execution id - kdy in s3
     query_execution_id = response['QueryExecutionId']
 
-    # get execution status - awating succesfull response
-    # todo: rewrite below to wait based on time rather than current loop 
+    # get execution status - awating succesfull response, todo: rewrite below to wait based on time rather than current loop 
     for i in range(1, 1 + RETRY_COUNT):
 
         # get query execution
@@ -134,41 +187,31 @@ def lambda_handler(event, context):
  
     # get query results
     result = client.get_query_results(QueryExecutionId=query_execution_id)
-    print query_execution_id
-
-    # get data
-    
-    
-    #print result
-    print len(result['ResultSet']['Rows'])
 
     #using id move csv file to S3 curated bucket for typical weekday and weekend
-    if len(result['ResultSet']['Rows']) == 2:
-        email = result['ResultSet']['Rows'][1]['Data'][1]['VarCharValue']
-        print email
-    else:
-        return None
-    print '-----'
+    client_s3 = boto3.resource('s3')
+    # Copy anthena query to curated csv for frontend rendering - html,D3
+    client_s3.Object(bucketname_routes,  "stat/typical_" + day_of_week.lower() + ".csv").copy_from(CopySource= filepath_incidents_statistic_write + "qry/"+ query_execution_id + ".csv")
     
-#------------------ iterate through csv -----------------------
-    #get incidents from S3 Bucket, only in progress.
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucketname_routes)
-    #read all csv files
-    for obj in bucket.objects.filter(Delimiter='/', Prefix=filepath_incidents_read_prefix_key):
-        #print obj.key
-        filename = str(obj.key)
-        if filename != filepath_incidents_read_prefix_key: #don't include empty key
-            print filename
-            
-        #process file by day of week e.g 'Wednesday'
+    # Delete the former object A
+    client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv").delete()
+    client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv.metadata").delete()
+    #set lifecycle policy in bucket subfolder - month exipiry (28-32 files)
+    print 'SUCCESSFUL - athena_typical_day_qry'
+    return 
+
+
+#query 24hour ahead...
+    
+def lambda_handler(event, context):
+    
+    athena_next_24_hrs_past_24_hrs()
     return
 
-    org_incCsv = pd.read_csv(s3_client.get_object(Bucket=bucketname_routes, Key=filepath_incidents_read)['Body'])
+    try:
+        athena_typical_day_qry()
+    except Exception, err:
+        print err
     
-
-    # TODO implement
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
-    }
+    print 'SUCCESSFUL - lamabda'
+    return 
