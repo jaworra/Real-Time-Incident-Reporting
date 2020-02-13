@@ -454,8 +454,9 @@ def lambda_handler(event, context):
     print total_crsh
     
     #get date as name 
-    dayOfWeek = dt.today().strftime('%A')
-    print today
+    print '---------------'
+    dayOfWeek = dt.strftime('%A') 
+    #TODO: send QA method
     
     def round_time(time, round_to):
         """roundTo is the number of minutes to round to"""
@@ -507,7 +508,7 @@ def lambda_handler(event, context):
             s3_client.upload_file(tmNew,Bucket=bucket_name,Key="stat/bytime/hhmm_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv")
             print 'saved stats in partition s3 file'
     #return    
-    
+
 #=======================================================================================================
     #write out summarise analytic incidents for dashboard.
     print 'summarised incidens start...'

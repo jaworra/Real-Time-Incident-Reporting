@@ -14,8 +14,27 @@ DATABASE = 'incidents'
 TABLE = 'daily_summaries_dashboard'
 S3_OUTPUT = 's3://public-test-road/stat/qry'
 S3_BUCKET = 'qry'
-# number of retries
-RETRY_COUNT = 5
+RETRY_COUNT = 5 # number of retries
+
+#------------------ queries run on below athena table-----------------------
+#create table if required below athena db *refrence incase tabld is dropped
+'''
+CREATE EXTERNAL TABLE IF NOT EXISTS historic_incidents_db.daily_summaries_partition(
+`date` string,
+`weekday` string,
+'incidentcount` int,
+`crashcount` int 
+) PARTITIONED BY (
+ `yymmdd_utcplus10` string 
+)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+WITH SERDEPROPERTIES (
+  'serialization.format' = ',',
+  'field.delim' = ','
+) LOCATION 's3://public-test-road/stat/bytime/'
+TBLPROPERTIES ('has_encrypted_data'='false')
+'''
+
 
 import time
 import boto3
@@ -25,7 +44,6 @@ from datetime import date, timedelta
 from botocore.vendored import requests
 import urllib2
 import json
-
 
 
 def athena_next_24_hrs_past_24_hrs():
@@ -93,13 +111,19 @@ def athena_next_24_hrs_past_24_hrs():
     
     #calls athena query
     results,query_execution_id = athena_qry(query)
+ 
+    #using id move csv file to S3 curated bucket for typical weekday and weekend
+    client_s3 = boto3.resource('s3')
+    # Copy anthena query to curated csv for frontend rendering - html,D3
+    client_s3.Object(bucketname_routes,  "stat/rolling_48_hour_window.csv").copy_from(CopySource= filepath_incidents_statistic_write + "qry/"+ query_execution_id + ".csv")
     
-    print results
-    print query_execution_id
-    
+    # Delete the former object A
+    client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv").delete()
+    client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv.metadata").delete()
+    #set lifecycle policy in bucket subfolder - month exipiry (28-32 files)
+    print 'SUCCESSFUL - athena_next_24_hrs_past_24_hrs'  
     return
 
-    
 
 def athena_typical_day_qry():
     '''
@@ -120,9 +144,6 @@ def athena_typical_day_qry():
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     today = datetime.datetime.strftime(dt,"%Y%m%d") #string yyyymmdd
     day_of_week = dt.strftime('%A')
-    
-    #Need to do qa check at 9ma the following code returns the right day (update lambda test_jworrall_incidents_current_delta line 455)
-    #print dt.today().strftime('%A')
 
     #anthena query
     '''
@@ -177,7 +198,6 @@ def athena_qry(query_string):
     requires parmaters- query string (e.g 'Select * from tbl') 
                         athena tbls config and repo set as global variables e.g (i.e tbl = incidents, repo = s3://bukect/qry)
     
-    
     '''
     
     #query and save to s3
@@ -226,33 +246,13 @@ def athena_qry(query_string):
 
 def lambda_handler(event, context):
     
-    athena_next_24_hrs_past_24_hrs()
-    return
-    
     try:
         athena_typical_day_qry()
+        athena_next_24_hrs_past_24_hrs()
     except Exception, err:
         print err
-    print 'COMPLETED - lamabda'
+        return
     
-    
-    #------------------ above athena queries  run on following table-----------------------
-    #create table if required below athena db *refrence incase tabled is drop
-    '''
-    CREATE EXTERNAL TABLE IF NOT EXISTS historic_incidents_db.daily_summaries_partition(
-      `date` string,
-      `weekday` string,
-      `incidentcount` int,
-      `crashcount` int 
-    ) PARTITIONED BY (
-      `yymmdd_utcplus10` string 
-    )
-    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
-    WITH SERDEPROPERTIES (
-      'serialization.format' = ',',
-      'field.delim' = ','
-    ) LOCATION 's3://public-test-road/stat/bytime/'
-    TBLPROPERTIES ('has_encrypted_data'='false')
-    '''
+    print 'SUCCESSFUL COMPLETED - lamabda'
     
     return 
