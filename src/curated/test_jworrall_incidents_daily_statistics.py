@@ -36,7 +36,6 @@ TBLPROPERTIES ('has_encrypted_data'='false')
 '''
 
 
-import time
 import boto3
 import json
 import datetime
@@ -44,6 +43,8 @@ from datetime import date, timedelta
 from botocore.vendored import requests
 import urllib2
 import json
+
+from athena_lambda import *
 
 
 def athena_next_24_hrs_past_24_hrs():
@@ -110,7 +111,7 @@ def athena_next_24_hrs_past_24_hrs():
         DATABASE, TABLE, col_wkday, day_of_week,col_wkday,col_hm,col_hm) 
     
     #calls athena query
-    results,query_execution_id = athena_qry(query)
+    results,query_execution_id = athena_qry(query,DATABASE,S3_OUTPUT,RETRY_COUNT)
  
     #using id move csv file to S3 curated bucket for typical weekday and weekend
     client_s3 = boto3.resource('s3')
@@ -177,7 +178,7 @@ def athena_typical_day_qry():
             DATABASE, TABLE, col_wkday, day_of_week,col_wkday,col_hm,col_hm) #stat query
     
     #calls athena query
-    results,query_execution_id = athena_qry(query)
+    results,query_execution_id = athena_qry(query,DATABASE,S3_OUTPUT,RETRY_COUNT)
 
     #using id move csv file to S3 curated bucket for typical weekday and weekend
     client_s3 = boto3.resource('s3')
@@ -191,57 +192,6 @@ def athena_typical_day_qry():
     print 'SUCCESSFUL - athena_typical_day_qry'
     return 
 
-
-def athena_qry(query_string):
-    '''
-    lambda athena interaction
-    requires parmaters- query string (e.g 'Select * from tbl') 
-                        athena tbls config and repo set as global variables e.g (i.e tbl = incidents, repo = s3://bukect/qry)
-    
-    '''
-    
-    #query and save to s3
-    # athena client 
-    client = boto3.client('athena')
-    # Execution
-    response = client.start_query_execution(
-        QueryString=query_string,
-        QueryExecutionContext={
-            'Database': DATABASE
-        },
-        ResultConfiguration={
-            'OutputLocation': S3_OUTPUT,
-        }
-    )
-    
-    #get query execution id - kdy in s3
-    query_execution_id = response['QueryExecutionId']
-
-    # get execution status - awating succesfull response, todo: rewrite below to wait based on time rather than current loop 
-    for i in range(1, 1 + RETRY_COUNT):
-
-        # get query execution
-        query_status = client.get_query_execution(QueryExecutionId=query_execution_id)
-        query_execution_status = query_status['QueryExecution']['Status']['State']
-
-        if query_execution_status == 'SUCCEEDED':
-            print("STATUS:" + query_execution_status)
-            break
-
-        if query_execution_status == 'FAILED':
-            raise Exception("STATUS:" + query_execution_status)
-
-        else:
-            print("STATUS:" + query_execution_status)
-            time.sleep(i)
-    else:
-        client.stop_query_execution(QueryExecutionId=query_execution_id)
-        raise Exception('TIME OVER')
- 
-    # get query results
-    athena_result = client.get_query_results(QueryExecutionId=query_execution_id)
-    
-    return athena_result,query_execution_id
 
 
 def lambda_handler(event, context):
