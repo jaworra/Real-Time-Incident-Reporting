@@ -1,7 +1,7 @@
 #Feature extraction from available API
 
-#todo: 1) refactor holiday and next 24 hour result
-#      2) set cloud watch  
+#todo: 1) refactor holiday check and add?
+#      2) set lifecyle on athena query bucket (temp location), instead of currenet method of delete files after copy.
 
 # Based on location of incident ('In progres') return proximity HERE flow network
 # Save S3 location
@@ -14,7 +14,7 @@ DATABASE = 'incidents'
 TABLE = 'daily_summaries_dashboard'
 S3_OUTPUT = 's3://public-test-road/stat/qry'
 S3_BUCKET = 'qry'
-RETRY_COUNT = 5 # number of retries
+RETRY_COUNT = 5 #number of retries
 
 #------------------ queries run on below athena table-----------------------
 #create table if required below athena db *refrence incase tabld is dropped
@@ -46,7 +46,6 @@ import json
 
 from athena_lambda import *
 
-
 def athena_next_24_hrs_past_24_hrs():
     '''
     create a rolling 48hour window for dashboard statistics every 24hours (set at 1145)
@@ -58,8 +57,8 @@ def athena_next_24_hrs_past_24_hrs():
     day_of_week = dt.strftime('%A')
     
     #set tomorrows date 
-    dt_24hours=dt + datetime.timedelta(hours=24) #24 hour previous 
-    tomorrows_day_of_week = dt_24hours.strftime('%A')
+    dt_24hours=dt - datetime.timedelta(hours=24) #24 hour previous 
+    yesterday_day_of_week = dt_24hours.strftime('%A')
     
     sel_stat_1 = 1
     sel_stat_2 = 2
@@ -108,7 +107,7 @@ def athena_next_24_hrs_past_24_hrs():
         % (col_wkday, col_hm,sel_stat_1,col_inc,col_inc,col_inc,col_inc,col_inc,
         DATABASE, TABLE, col_wkday, day_of_week,col_wkday,col_hm,
         col_wkday, col_hm,sel_stat_2,col_inc,col_inc,col_inc,col_inc,col_inc,
-        DATABASE, TABLE, col_wkday, day_of_week,col_wkday,col_hm,col_hm) 
+        DATABASE, TABLE, col_wkday, yesterday_day_of_week,col_wkday,col_hm,col_hm) 
     
     #calls athena query
     results,query_execution_id = athena_qry(query,DATABASE,S3_OUTPUT,RETRY_COUNT)
@@ -116,7 +115,7 @@ def athena_next_24_hrs_past_24_hrs():
     #using id move csv file to S3 curated bucket for typical weekday and weekend
     client_s3 = boto3.resource('s3')
     # Copy anthena query to curated csv for frontend rendering - html,D3
-    client_s3.Object(bucketname_routes,  "stat/rolling_48_hour_window.csv").copy_from(CopySource= filepath_incidents_statistic_write + "qry/"+ query_execution_id + ".csv")
+    client_s3.Object(bucketname_routes, "stat/rolling_48_hour_window.csv")    .copy_from(CopySource= filepath_incidents_statistic_write + "qry/"+ query_execution_id + ".csv")
     
     # Delete the former object A
     client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv").delete()
@@ -191,7 +190,6 @@ def athena_typical_day_qry():
     #set lifecycle policy in bucket subfolder - month exipiry (28-32 files)
     print 'SUCCESSFUL - athena_typical_day_qry'
     return 
-
 
 
 def lambda_handler(event, context):
