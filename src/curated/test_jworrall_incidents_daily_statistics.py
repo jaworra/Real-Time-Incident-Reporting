@@ -14,7 +14,7 @@ DATABASE = 'incidents'
 TABLE = 'daily_summaries_dashboard'
 S3_OUTPUT = 's3://public-test-road/stat/qry'
 S3_BUCKET = 'qry'
-RETRY_COUNT = 5 #number of retries
+RETRY_COUNT = 8#5 #number of retries
 
 #------------------ queries run on below athena table-----------------------
 #create table if required below athena db *refrence incase tabld is dropped
@@ -46,27 +46,41 @@ import json
 
 from athena_lambda import *
 
-def athena_next_24_hrs_past_24_hrs():
+def athena_rolling_window():
     '''
-    create a rolling 48hour window for dashboard statistics every 24hours (set at 1145)
-    
+    create a rolling window 
+    1 - query1 - 48 hour window
+    2 - query2 - 4 day window
+    for dashboard statistics every 24hours (set at 1145)
     '''
     #set current date 
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     today = datetime.datetime.strftime(dt,"%Y%m%d") #string yyyymmdd
     day_of_week = dt.strftime('%A')
     
-    #set tomorrows date 
+    #set yesterdays date 
     dt_24hours=dt - datetime.timedelta(hours=24) #24 hour previous 
     yesterday_day_of_week = dt_24hours.strftime('%A')
     
+    #set tomorrows date 
+    dt_24hours=dt + datetime.timedelta(hours=24) #24 hour previous
+    tomorrow_day_of_week = dt_24hours.strftime('%A')
+    #following date
+    dt_24hours=dt + datetime.timedelta(hours=48) #24 hour previous
+    two_days_ahead_day_of_week = dt_24hours.strftime('%A')   
+    
+    #current time for partiion qry
+    current_time= str(datetime.datetime.strftime(dt,"%H%M"))
+
     sel_stat_1 = 1
     sel_stat_2 = 2
+    sel_stat_3 = 3
+    sel_stat_4 = 4
     col_wkday = 'weekday'    
     col_inc = 'incidentcount' 
     col_hm = 'hhmm_utcplus10' 
     
-    #anthena query
+    #anthena orginal query - rolling 48 hour query
     '''
     SELECT weekday, hhmm_utcplus10, 1 as select_order,
     min (incidentcount) as "minimum_incidents",
@@ -88,38 +102,125 @@ def athena_next_24_hrs_past_24_hrs():
     '''
     
     query = "SELECT %s,%s,%d as select_order, " \
-        "min (%s) as minimum_incidents," \
-        "approx_percentile(%s, 0.25) as appx_Q1_incidents," \
-        "AVG (%s) as average_incidents," \
-        "approx_percentile(%s, 0.75) as appx_Q3_incidents," \
-        "max (%s) as maximum_incidents " \
+        "min (%s) as minimum_incidents, approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+        "AVG (%s) as average_incidents, approx_percentile(%s, 0.75) as appx_Q3_incidents, max (%s) as maximum_incidents " \
         "FROM %s.%s where %s = '%s' " \
         "GROUP BY %s,%s" \
         " UNION " \
         "SELECT %s,%s,%d as select_order, " \
-        "min (%s) as minimum_incidents," \
-        "approx_percentile(%s, 0.25) as appx_Q1_incidents," \
-        "AVG (%s) as average_incidents," \
-        "approx_percentile(%s, 0.75) as appx_Q3_incidents," \
-        "max (%s) as maximum_incidents " \
+        "min (%s) as minimum_incidents, approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+        "AVG (%s) as average_incidents, approx_percentile(%s, 0.75) as appx_Q3_incidents, max (%s) as maximum_incidents " \
         "FROM %s.%s where %s = '%s' " \
         "GROUP BY %s,%s ORDER BY select_order,%s;"  \
-        % (col_wkday, col_hm,sel_stat_1,col_inc,col_inc,col_inc,col_inc,col_inc,
-        DATABASE, TABLE, col_wkday, day_of_week,col_wkday,col_hm,
-        col_wkday, col_hm,sel_stat_2,col_inc,col_inc,col_inc,col_inc,col_inc,
-        DATABASE, TABLE, col_wkday, yesterday_day_of_week,col_wkday,col_hm,col_hm) 
+        % (col_wkday, col_hm,sel_stat_1,
+        col_inc,col_inc,
+        col_inc,col_inc,col_inc,
+        DATABASE, TABLE, col_wkday, day_of_week,
+        col_wkday,col_hm,
+        col_wkday,col_hm,sel_stat_2,
+        col_inc,col_inc,
+        col_inc,col_inc,col_inc,
+        DATABASE, TABLE, col_wkday, yesterday_day_of_week,
+        col_wkday,col_hm,col_hm) 
     
+    #anthena updated query - rolling 4 day 
+    '''
+    SELECT weekday, hhmm_utcplus10, 1 as select_order,
+        min (incidentcount) as "minimum_incidents",
+        approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+        AVG (incidentcount) as "average_incidents",
+        approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+        max (incidentcount) as "maximum_incidents"
+        FROM "incidents"."daily_summaries_dashboard" where weekday = 'Tuesday' and hhmm_utcplus10 >= '0857'
+        GROUP BY weekday,hhmm_utcplus10 
+        UNION 
+    SELECT weekday, hhmm_utcplus10, 2 as select_order,
+        min (incidentcount) as "minimum_incidents",
+        approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+        AVG (incidentcount) as "average_incidents",
+        approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+        max (incidentcount) as "maximum_incidents"
+        FROM "incidents"."daily_summaries_dashboard" where weekday = 'Wednesday' 
+        GROUP BY weekday,hhmm_utcplus10 
+        UNION 
+    SELECT weekday, hhmm_utcplus10, 3 as select_order,
+        min (incidentcount) as "minimum_incidents",
+        approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+        AVG (incidentcount) as "average_incidents",
+        approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+        max (incidentcount) as "maximum_incidents"
+        FROM "incidents"."daily_summaries_dashboard" where weekday = 'Thursday' 
+        GROUP BY weekday,hhmm_utcplus10 
+        UNION 
+    SELECT weekday, hhmm_utcplus10, 4 as select_order,
+        min (incidentcount) as "minimum_incidents",
+        approx_percentile(incidentcount, 0.25) as "appx_Q1_incidents",
+        AVG (incidentcount) as "average_incidents",
+        approx_percentile(incidentcount, 0.75) as "appx_Q3_incidents",                      
+        max (incidentcount) as "maximum_incidents"
+        FROM "incidents"."daily_summaries_dashboard" where weekday = 'Friday'and hhmm_utcplus10 <= '0857'
+        GROUP BY weekday,hhmm_utcplus10 Order by select_order,hhmm_utcplus10    
+    '''
+
+    query = "SELECT %s,%s,%d as select_order, " \
+        "min (%s) as minimum_incidents, approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+        "AVG (%s) as average_incidents, approx_percentile(%s, 0.75) as appx_Q3_incidents, max (%s) as maximum_incidents " \
+        "FROM %s.%s where %s = '%s' and %s >= '%s'" \
+        "GROUP BY %s,%s" \
+        " UNION " \
+        "SELECT %s,%s,%d as select_order, " \
+        "min (%s) as minimum_incidents, approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+        "AVG (%s) as average_incidents, approx_percentile(%s, 0.75) as appx_Q3_incidents, max (%s) as maximum_incidents " \
+        "FROM %s.%s where %s = '%s' " \
+        "GROUP BY %s,%s" \
+        " UNION " \
+        "SELECT %s,%s,%d as select_order, " \
+        "min (%s) as minimum_incidents, approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+        "AVG (%s) as average_incidents, approx_percentile(%s, 0.75) as appx_Q3_incidents, max (%s) as maximum_incidents " \
+        "FROM %s.%s where %s = '%s' " \
+        "GROUP BY %s,%s" \
+        " UNION " \
+        "SELECT %s,%s,%d as select_order, " \
+        "min (%s) as minimum_incidents, approx_percentile(%s, 0.25) as appx_Q1_incidents," \
+        "AVG (%s) as average_incidents, approx_percentile(%s, 0.75) as appx_Q3_incidents, max (%s) as maximum_incidents " \
+        "FROM %s.%s where %s = '%s' and %s <= '%s'" \
+        "GROUP BY %s,%s ORDER BY select_order,%s;"  \
+        % (col_wkday, col_hm,sel_stat_1,
+        col_inc,col_inc,
+        col_inc,col_inc,col_inc,
+        DATABASE, TABLE, col_wkday, yesterday_day_of_week,col_hm,current_time,
+        col_wkday,col_hm,
+        col_wkday, col_hm,sel_stat_2,
+        col_inc,col_inc,
+        col_inc,col_inc,col_inc,
+        DATABASE, TABLE, col_wkday, day_of_week,
+        col_wkday,col_hm,
+        col_wkday, col_hm,sel_stat_3,
+        col_inc,col_inc,
+        col_inc,col_inc,col_inc,
+        DATABASE, TABLE, col_wkday, tomorrow_day_of_week,
+        col_wkday,col_hm,                
+        col_wkday,col_hm,sel_stat_4,
+        col_inc,col_inc,
+        col_inc,col_inc,col_inc,
+        DATABASE, TABLE, col_wkday, two_days_ahead_day_of_week,col_hm,current_time,
+        col_wkday,col_hm,col_hm)
+
     #calls athena query
     results,query_execution_id = athena_qry(query,DATABASE,S3_OUTPUT,RETRY_COUNT)
- 
+
     #using id move csv file to S3 curated bucket for typical weekday and weekend
     client_s3 = boto3.resource('s3')
-    # Copy anthena query to curated csv for frontend rendering - html,D3
-    client_s3.Object(bucketname_routes, "stat/rolling_48_hour_window.csv")    .copy_from(CopySource= filepath_incidents_statistic_write + "qry/"+ query_execution_id + ".csv")
     
-    # Delete the former object A
+    # Copy anthena query to curated csv for frontend rendering - html,D3
+    bucketname_routes="public-test-road"
+    client_s3.Object(bucketname_routes, "stat/rolling_4day_window.csv").delete() #copy over by rename does not change contents .csv -> therefore delete original csv
+    client_s3.Object(bucketname_routes, "stat/rolling_4day_window.csv").copy_from(CopySource= filepath_incidents_statistic_write + "qry/"+ query_execution_id + ".csv")
+
+    # clean up query logs
     client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv").delete()
     client_s3.Object(bucketname_routes, "stat/qry/"+ query_execution_id + ".csv.metadata").delete()
+    
     #set lifecycle policy in bucket subfolder - month exipiry (28-32 files)
     print 'SUCCESSFUL - athena_next_24_hrs_past_24_hrs'  
     return
@@ -193,10 +294,10 @@ def athena_typical_day_qry():
 
 
 def lambda_handler(event, context):
-    
+
     try:
         athena_typical_day_qry()
-        athena_next_24_hrs_past_24_hrs()
+        athena_rolling_window()
     except Exception, err:
         print err
         return
