@@ -1,6 +1,11 @@
-import csv#take this out!!!
-import math
+'''
+Misc method - reassign dates to days. As incorrect prior process due to not setting corretly UTC10+
+'''
 
+import csv #take this out!!!
+import math
+import boto3
+from datetime import date, timedelta
 
 # Get all CSV files in the bucket
 def get_csv_files(client, bucket):
@@ -85,7 +90,6 @@ def qa_checking_dates():
             check_file_fordates(s3_client,key_string,bucketname_routes)
             #return
     return   
-
 
 
 def lambda_handler(event, context):
