@@ -33,7 +33,6 @@ from postgres_db import *
 #Next steps - migrate 
 #CSV to JSON (better formating integration with deck.gl)
 #Try methods to catch excemptions on api being down. 
-
 import json
 import datetime
 import boto3
@@ -153,6 +152,11 @@ def lambda_handler(event, context):
     response = requests.get(ser_SIMSRecent,params=payload_ser_SIMSRecent, headers=headers_txt, timeout=600)
     jdata= response.json()
     
+    # Send out json if required
+    # s3 = boto3.resource('s3')
+    # s3object = s3.Object(bucket_name,'data/raw/Incidents_sims.json')
+    # s3object.put(Body=(bytes(json.dumps(jdata).encode('UTF-8'))))
+    
     #reset payload based total size minus chosen records per day
     numRec = jdata.get('totalFound')
 
@@ -167,11 +171,6 @@ def lambda_handler(event, context):
     response = requests.get(ser_SIMSRecent,params=payload_ser_SIMSRecent, headers=headers_txt, timeout=600)
     jdata= response.json()        
     #data = response.content
-
-    # Send out json if required
-    # s3 = boto3.resource('s3')
-    # s3object = s3.Object(bucket_name,key_raw_sims)
-    # s3object.put(Body=(bytes(json.dumps(jdata).encode('UTF-8'))))
     
     #set current date and yesterday
     dt=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
@@ -245,12 +244,11 @@ def lambda_handler(event, context):
     # print logg[12:19]+" "+logg[:10]
     # return
     
-  
 #==================================Compare and add data====================================================================
 #==================================Instead of rewrite====================================================================
 #if the bus not affected "None" else provide ID
 
-#look for unique value in dataframe 1 (Read csv), then delete this record
+#look for unique value in dataframe 1 (Read csv) , then delete this record
     s3 = boto3.client('s3')
     obj = s3.get_object(Bucket=bucket_name, Key=key_list_view)
     old_data = pd.read_csv(obj['Body'])
@@ -403,28 +401,23 @@ def lambda_handler(event, context):
     #SIMS Id | Event type | Location | District | Start time | Impact| Bus routes potentially affected        
     #id | Type (classification)  |	Road, Suburb location  | region	 | Starttime  |	Delay blockageType severityCategory
 
-    elif Opt ==2:
-        #print new_data
-        #print list(new_data)
-        #print strnew_data['loggedTime']
-        #"09:27:03 07/08'
-        #return
+    elif Opt ==2: 
+        #ConditonA : updated this part for the daahboard list html - User (Ted) required setting not to display - Planned Event/Roadworks (Roadworks)
+        #ConditonA :however all statistics still included this as events etc... only display effected (html)
+        #ConditonA :The idea is not to display additional informaiton    
+
         df=new_data#check
         #writes out csv for home page (table)
         with open(tmNew,"w") as f:
             #f.write('id,type,blockage Type,classification,road,loggedTime,Bus Routes Affected'+ '\n') #headers
             f.write('id,Event Type,Location,District,logged Time,Impact,Bus Routes Affected'+ '\n') #headers            
             for index, row in df.iterrows():
-                lineCsv = str(row['id'])+"," +str(row['type'])+" ("+str(row['classification'])+"),"
-                #print str(row['suburb'])
-                lineCsv += str(row['road'])+" ("+str(row['suburb'])+"),"+str(row['region'])+","+str(row['loggedTime'])[0:8]+","
-                lineCsv += str(row['delay'])+" "+str(row['blockageType'])+" ("+str(row['severityCategory'])+"),"+str(row['Bus Routes Affected']) +'\n'
-                
-                #lineCsv += str(row['delay'])+" "+str(row['blockageType'])+" "+str(row['severityCategory'])","+str(row['Bus Routes Affected']) +'\n'
-                #str(row['blockageType'])+","
-                #lineCsv = str(row['id'])+"," +str(row['type'])+","+str(row['blockageType'])+","+str(row['classification'])+","
-                #lineCsv+=str(row['road']) +","+str(row['loggedTime'])[0:8]+","+str(row['Bus Routes Affected']) +'\n'
-                f.write(lineCsv)
+                #ConditonA :
+                if str(row['type']) != 'Planned Event/Roadworks': #ConditonA : Remove line if ConditionA needs to change
+                    lineCsv = str(row['id'])+"," +str(row['type'])+" ("+str(row['classification'])+"),"
+                    lineCsv += str(row['road'])+" ("+str(row['suburb'])+"),"+str(row['region'])+","+str(row['loggedTime'])[0:8]+","
+                    lineCsv += str(row['delay'])+" "+str(row['blockageType'])+" ("+str(row['severityCategory'])+"),"+str(row['Bus Routes Affected']) +'\n'
+                    f.write(lineCsv)
         s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key_list_view)
     #return
 
@@ -433,7 +426,6 @@ def lambda_handler(event, context):
 #Maybe load up csv and then check the file to see the same time and day - if the both eqal don't write out...
 
 #2) or write out to include the maximum or moving average????
-
 #Important make sure you check and include the number of crashes count!!!
     
 #=======================================================================================================
@@ -456,8 +448,12 @@ def lambda_handler(event, context):
     #get date as name 
     print '---------------'
     dayOfWeek = dt.strftime('%A') 
-    #TODO: send QA method
+    print dt
+    print dayOfWeek
+    #return 
     
+    #TODO: send QA method required here (open csv and compare date with weekday - i.e 20190824 = Friday) 
+
     def round_time(time, round_to):
         """roundTo is the number of minutes to round to"""
         rounded = time + datetime.timedelta(minutes=round_to/2.)
@@ -468,7 +464,8 @@ def lambda_handler(event, context):
     nameCsvStat = datetime.datetime.strftime(round_time(dt,15),"%H%M") #format
 
     #total_inc
-    key="stat/"+nameCsvStat+".csv"
+    #key="stat/"+nameCsvStat+".csv"
+    key="stat/"+nameCsvStat+"_new.csv" #updated here to include the date
     #key=nameCsvStat+".csv"
     print "write out stats..."
     #print key
@@ -505,10 +502,11 @@ def lambda_handler(event, context):
                     lineCsv = str(row['Date'])+"," +str(row['Weekday'])+","+str(row['IncidentCount'])+","+str(row['CrashCount'])+'\n'
                     f.write(lineCsv)
             s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key) #remove this in 24 hours!!
+
             s3_client.upload_file(tmNew,Bucket=bucket_name,Key="stat/bytime/hhmm_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv")
             print 'saved stats in partition s3 file'
     #return    
-
+    
 #=======================================================================================================
     #write out summarise analytic incidents for dashboard.
     print 'summarised incidens start...'
