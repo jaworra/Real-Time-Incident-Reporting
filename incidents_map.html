@@ -88,98 +88,68 @@
       numberOfLights: 2
     };
 
+    const ICON_MAPPING = {
+      marker: {x: 0, y: 0, width: 110, height: 110, mask: false}
+    };
+
+
     const myDeckLayer_crashes = new MapboxLayer({
-      id: 'newscatterplot4',
-      type: ScatterplotLayer,
+      id: 'icon',
+      type: IconLayer,
+      iconAtlas: 'images/icons/01360_Icons_crashAlert_r.png',
       data: d3.csv(DATA_URL, function(d) {if( d["classification"] == "Primary Crash" || d["classification"] == "Secondary Crash" ) { return d; }}), 
-      opacity: 0.1,
-      stroked: true,
-      radiusScale: 10,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 50,
-      lineWidthMinPixels: 10,
+      sizeScale: 7,
+      iconMapping: ICON_MAPPING,
       autoHighlight: true,
       highlightColor: [255,255,0,250],
       pickable: true,
       onHover: onHover,
+      getIcon: d => 'marker',
+      getSize: d => 7,
       getPosition: d => [Number(d.lng), Number(d.lat)],
-      getLineColor: d => [255, 255, 255],
       getColor: d => [255, 255, 255]
-});
+      });
 
-
-//Load base map - In progress data *priority
-const myDeckLayer_priority = new MapboxLayer({
-    id: 'my-scatterplot',
-    type: ScatterplotLayer,
-    data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] != "No Blockage" && d["blockageType"] != "Unknown") { return d; }}),
-    opacity: 1,
-    stroked: true,
-    radiusScale: 10,
-    radiusMinPixels: 5,
-    radiusMaxPixels: 50,
-    lineWidthMinPixels: 1,
-    autoHighlight: true,
-    highlightColor: [255,255,0,250],
-    pickable: true,
-    onHover: onHoverProgressd,
-    getPosition: d => [Number(d.lng), Number(d.lat)],
-    getLineColor: d => [0, 0, 0],
-    getColor: d => [255, 0, 0]
-});
-
-const myDeckLayer_unknown = new MapboxLayer({
-      id: 'newscatterplot',
-      type: ScatterplotLayer,
-      data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] == "Unknown") { return d; }}),
-      opacity: 0.6,
-      stroked: true,
-      radiusScale: 10,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 50,
-      lineWidthMinPixels: 1,
+      const myDeckLayer_recurring = new MapboxLayer({
+      id: 'icon2',
+      type: IconLayer,
+      iconAtlas: 'images/icons/01360_Icons_congestion_b.png',
+      data: d3.csv(DATA_URL, function(d) {if( d["classification"] == "Recurring" ) { return d; }}), 
+      sizeScale: 7,
+      iconMapping: ICON_MAPPING,
       autoHighlight: true,
       highlightColor: [255,255,0,250],
       pickable: true,
       onHover: onHover,
+      getIcon: d => 'marker',
+      getSize: d => 7,
       getPosition: d => [Number(d.lng), Number(d.lat)],
-      getLineColor: d => [0, 0, 0],
-      getColor: d => [211, 131, 6]
-      //getColor: d =>[255,80,0]
-      //getColor: d =>[169, 104, 2]
-      //getColor: d =>[168, 178, 190]
+      getColor: d => [255, 255, 255]
+      });
 
-});
-
-const myDeckLayer_no_blockage = new MapboxLayer({
-      id: 'newscatterplot2',
-      type: ScatterplotLayer,
-      data: d3.csv(DATA_URL, function(d) {if( d["blockageType"] == "No Blockage") { return d; }}),
-      opacity: 0.1,
-      stroked: true,
-      radiusScale: 10,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 50,
-      lineWidthMinPixels: 1,
+      const myDeckLayer_all_others = new MapboxLayer({
+      id: 'icon3',
+      type: IconLayer,
+      iconAtlas: 'images/icons/icons_congestionFuture_g.png',
+      data: d3.csv(DATA_URL, function(d) {if( d["classification"] != "Recurring" || d["classification"] == "Primary Crash" || d["classification"] == "Secondary Crash" ) { return d; }}), 
+      sizeScale: 7,
+      iconMapping: ICON_MAPPING,
       autoHighlight: true,
       highlightColor: [255,255,0,250],
       pickable: true,
       onHover: onHover,
+      getIcon: d => 'marker',
+      getSize: d => 7,
       getPosition: d => [Number(d.lng), Number(d.lat)],
-      getLineColor: d => [0, 0, 0],
-      getColor: d => [255, 127, 0]
-});
-
-
+      getColor: d => [255, 255, 255]
+      });
 
 
   	map.on('load', () => {
 
-    map.addLayer(myDeckLayer_priority);
-  	map.addLayer(myDeckLayer_unknown);
-    map.addLayer(myDeckLayer_no_blockage);
+    map.addLayer(myDeckLayer_all_others);
     map.addLayer(myDeckLayer_crashes);
-    
+    map.addLayer(myDeckLayer_recurring);
   	});
 
 //        OPTIONS.forEach(key => {
