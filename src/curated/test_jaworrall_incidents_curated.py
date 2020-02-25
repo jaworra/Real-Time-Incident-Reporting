@@ -353,10 +353,11 @@ def lambda_handler(event, context):
     session = boto3.Session()
     s3_client = session.client('s3')
     
-    #include bus (PT returns in original dataframe)
+    #add found bus to sims output to map, convert id type for join
     df_with_bus = df
-    df_with_bus['Bus Routes Affected'] = "" #initilise new column
-    df_with_bus['Bus Routes Affected']=new_data['id'].map(d) #get column bus from previous dataframe
+    df_with_bus['id']= df_with_bus['id'].astype(str).astype(int)
+    df_with_bus = pd.merge(df_with_bus, new_data[['id','Bus Routes Affected']], on='id', how='left')
+    
 
     #writes out csv live Visualisation (deck.gl) - but only the records with coordinates (able to be displayed)
     tmNew=r"/tmp/tmp.csv"
