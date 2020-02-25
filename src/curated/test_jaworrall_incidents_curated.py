@@ -235,15 +235,12 @@ def lambda_handler(event, context):
            
     df = pd.DataFrame(data, columns=dfcols)
     df = df[::-1] #reverese order -> for home page
-    #print df_alert
-        
+
     sum_data = df.loc[df['status'] == 'In Progress']
 
     #write out to bucket
     print "-successful output-"
-    # print logg[12:19]+" "+logg[:10]
-    # return
-    
+
 #==================================Compare and add data====================================================================
 #==================================Instead of rewrite====================================================================
 #if the bus not affected "None" else provide ID
@@ -357,23 +354,43 @@ def lambda_handler(event, context):
     session = boto3.Session()
     s3_client = session.client('s3')
     
+    #include bus (PT returns in original dataframe)
+    df_with_bus = df
+    df_with_bus['Bus Routes Affected'] = "" #initilise new column
+    df_with_bus['Bus Routes Affected']=new_data['id'].map(d) #get column bus from previous dataframe
+
     #writes out csv live Visualisation (deck.gl) - but only the records with coordinates (able to be displayed)
     tmNew=r"/tmp/tmp.csv"
     with open(tmNew,"w") as f:
-        f.write('id,lng,lat,status,blockageType,classification,loggedTime'+ '\n') #headers
-        for index, row in df.iterrows():
-            #print(row['id'], row['coordinates'])
-            lineCsv = str(row['id'])+","
-            lineCsv+= str(row['coordinates']).replace('[', '').replace(']', '').replace(', -', ',-')+","
-            #lineCsv+=str(row['status'])+","+str(row['blockageType'])+","+str(row['classification'])+","+str(row['loggedTime'])+'\n' #Instead of logged time - change formatt to HH:MM:SS YYYY-MM-DD
-            #lineCsv+=str(row['status'])+","+str(row['blockageType'])+","+str(row['classification'])+","+logg[12:19]+" "+logg[:10]+'\n' #Instead of logged time - change formatt to HH:MM:SS YYYY-MM-DD
-            lineCsv+=str(row['status'])+","+str(row['blockageType'])+","+str(row['classification'])+","+str(row['loggedTime'])[11:19]+" "+str(row['loggedTime'])[8:10] +"-"+ str(row['loggedTime'])[5:7] +"-"+ str(row['loggedTime'])[:4] + '\n'            
-            #print lineCsv
+        f.write('type,classification,road,suburb,status,loggedTime,id,ImpactedBusRoutes,lng,lat'+ '\n')
+        for index, row in df_with_bus.iterrows():
+            
+            lineCsv = str(row['type'])+","+str(row['classification'])+","+str(row['road'])+","+str(row['suburb'])+","+str(row['status'])+","
+            lineCsv+= str(row['loggedTime'])[11:19]+" "+str(row['loggedTime'])[8:10] +"-"+ str(row['loggedTime'])[5:7] +"-"+ str(row['loggedTime'])[:4]+","
+            lineCsv+= str(row['id'])+","+str(row['Bus Routes Affected'])+","+str(row['coordinates']).replace('[', '').replace(']', '').replace(', -', ',-') + '\n'  
+            
             if not str(row['coordinates']) == '':
                 #print "no coordinates!!"
                 f.write(lineCsv)
     s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key_map_view)
-    #return
+    
+    '''
+    #Depricated
+    #writes out csv live Visualisation (deck.gl) - but only the records with coordinates (able to be displayed)
+    tmNew=r"/tmp/tmp.csv"
+    with open(tmNew,"w") as f:
+        f.write('id,lng,lat,status,blockageType,classification,loggedTime,ImpactedBusRoutes'+ '\n') #headers
+        for index, row in df.iterrows():
+            lineCsv = str(row['id'])+","
+            lineCsv+= str(row['coordinates']).replace('[', '').replace(']', '').replace(', -', ',-')+","
+            lineCsv+= str(row['status'])+","+str(row['blockageType'])+","+str(row['classification'])+","+str(row['loggedTime'])[11:19]+" "+str(row['loggedTime'])[8:10] +"-"+ str(row['loggedTime'])[5:7] +"-"+ str(row['loggedTime'])[:4] + '\n'            
+            
+            if not str(row['coordinates']) == '':
+                #print "no coordinates!!"
+                f.write(lineCsv)
+    s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key_map_view)
+    '''
+
 #===========================writes out to table/dashboard=============================================
     #Opt 1) - write out table without BusRoutes affected
     #Opt 2) - Adds BusRoutes affected
@@ -402,7 +419,7 @@ def lambda_handler(event, context):
     #id | Type (classification)  |	Road, Suburb location  | region	 | Starttime  |	Delay blockageType severityCategory
 
     elif Opt ==2: 
-        #ConditonA : updated this part for the daahboard list html - User (Ted) required setting not to display - Planned Event/Roadworks (Roadworks)
+        #ConditonA : updated this part for the dashboard list html - User (Ted) required setting not to display - Planned Event/Roadworks (Roadworks)
         #ConditonA :however all statistics still included this as events etc... only display effected (html)
         #ConditonA :The idea is not to display additional informaiton    
 
