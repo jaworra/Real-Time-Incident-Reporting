@@ -164,13 +164,15 @@
 
     	//apply_dateselector();
       //{object.classification}${"<br />"}${object.loggedTime}${"<br />"}
+
     	function onHover (info) {
     	  const {x, y, object} = info;
     	  if (object) {
     		tooltip.style.left = `${x}px`;
     		tooltip.style.top = `${y}px`;
-    		tooltip.innerHTML = `${object.status}: ${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
-    	  } else {
+    		tooltip.innerHTML = `${object.type}${"<br />"}${object.road}${", "}${object.suburb}${"<br />"}${object.status}${"<br />Started: "}${object.loggedTime}${"<br />Id: "}${object.id}${"<br />Impacted bus routes: "}${object.ImpactedBusRoutes}${"<br />"}`;
+        //tooltip.innerHTML = `${object.status}: ${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
+        } else {
     		tooltip.innerHTML = '';
     	  }
     	}
@@ -180,8 +182,9 @@
     	  if (object) {
     		tooltip.style.left = `${x}px`;
     		tooltip.style.top = `${y}px`;
-    		tooltip.innerHTML = `${object.status}:${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
-    	  } else {
+    		tooltip.innerHTML = `${object.type}${"<br />"}${object.road}${", "}${object.suburb}${"<br />"}${object.status}${"<br />Started: "}${object.loggedTime}${"<br />Id: "}${object.id}${"<br />Impacted bus routes: "}${object.ImpactedBusRoutes}${"<br />"}`;
+        ///tooltip.innerHTML = `${object.status}:${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
+        } else {
     		tooltip.innerHTML = '';
     	  }
     	}
