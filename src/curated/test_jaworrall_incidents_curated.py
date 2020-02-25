@@ -336,7 +336,6 @@ def lambda_handler(event, context):
                 #assign value
                 new_data['Bus Routes Affected'][index]=busAffected
                 validRet=0 
-            
             # else:            
             #     print 'No proccessing Done - using original valuess'
             
@@ -365,9 +364,13 @@ def lambda_handler(event, context):
         f.write('type,classification,road,suburb,status,loggedTime,id,ImpactedBusRoutes,lng,lat'+ '\n')
         for index, row in df_with_bus.iterrows():
             
+            bus_routes_str = str(row['Bus Routes Affected'])
+            if bus_routes_str == 'nan':
+                bus_routes_str = 'No Buses Affected'
+                
             lineCsv = str(row['type'])+","+str(row['classification'])+","+str(row['road'])+","+str(row['suburb'])+","+str(row['status'])+","
             lineCsv+= str(row['loggedTime'])[11:19]+" "+str(row['loggedTime'])[8:10] +"-"+ str(row['loggedTime'])[5:7] +"-"+ str(row['loggedTime'])[:4]+","
-            lineCsv+= str(row['id'])+","+str(row['Bus Routes Affected'])+","+str(row['coordinates']).replace('[', '').replace(']', '').replace(', -', ',-') + '\n'  
+            lineCsv+= str(row['id'])+","+bus_routes_str+","+str(row['coordinates']).replace('[', '').replace(']', '').replace(', -', ',-') + '\n'  
             
             if not str(row['coordinates']) == '':
                 #print "no coordinates!!"
@@ -467,7 +470,6 @@ def lambda_handler(event, context):
     dayOfWeek = dt.strftime('%A') 
     print dt
     print dayOfWeek
-    #return 
     
     #TODO: send QA method required here (open csv and compare date with weekday - i.e 20190824 = Friday) 
 
@@ -480,17 +482,15 @@ def lambda_handler(event, context):
         return rounded
     nameCsvStat = datetime.datetime.strftime(round_time(dt,15),"%H%M") #format
 
-    #total_inc
-    #key="stat/"+nameCsvStat+".csv"
-    key="stat/"+nameCsvStat+"_new.csv" #updated here to include the date
-    #key=nameCsvStat+".csv"
-    print "write out stats..."
-    #print key
     
+    print "write out stats..."
+
     #check file exist
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket_name)
+    key = "stat/bytime/hhmm_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv" #partion key for athena
     objs = list(bucket.objects.filter(Prefix=key))  
+
     
     if objs == []:
         print "no file - Print out"
@@ -505,10 +505,8 @@ def lambda_handler(event, context):
         #load the whole file and then check  - for updates and rewrie
         response = bucket.Object(key=key).get()
         csvdf = pd.read_csv(io.BytesIO(response['Body'].read()), encoding='utf8')
-        
-        print csvdf
         df1 = csvdf[csvdf['Date'].astype(str).str.contains(today)]
-        print df1
+
         if csvdf[csvdf['Date'].astype(str).str.contains(today)].empty: #check if its the same day   #chage out the 'not statemtne'  - only write out...
             print "already ran today!!"
             csvdf = csvdf.append({'Date': today, 'Weekday': dayOfWeek, 'IncidentCount': str(total_inc),'CrashCount': str(total_crsh)}, ignore_index=True)     
@@ -518,11 +516,9 @@ def lambda_handler(event, context):
                 for index, row in csvdf.iterrows():
                     lineCsv = str(row['Date'])+"," +str(row['Weekday'])+","+str(row['IncidentCount'])+","+str(row['CrashCount'])+'\n'
                     f.write(lineCsv)
-            s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key) #remove this in 24 hours!!
 
-            s3_client.upload_file(tmNew,Bucket=bucket_name,Key="stat/bytime/hhmm_utcplus10="+nameCsvStat+"/"+nameCsvStat+".csv")
+            s3_client.upload_file(tmNew,Bucket=bucket_name,Key=key)
             print 'saved stats in partition s3 file'
-    #return    
     
 #=======================================================================================================
     #write out summarise analytic incidents for dashboard.
