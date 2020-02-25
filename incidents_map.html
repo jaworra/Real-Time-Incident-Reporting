@@ -25,7 +25,7 @@
     </style>
   </head>
   <body>
-    <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+    <div id="TMR-panel"> <a href="incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
     <div id="tooltip"></div>
   	<div id="TIME-clock">	</div>
     <div id="control-panel">
@@ -56,7 +56,6 @@
   <script type="text/javascript">
 
 
-// Look int
 	mapboxgl.accessToken = 'pk.eyJ1IjoiamF3b3JyYSIsImEiOiJjanh6ZXBoZjQwMjlvM25wamN3eWw4aHowIn0.sfurxwTqAA9OqJr72WXjAg';
 
     const {MapboxLayer, HexagonLayer} = deck;
@@ -68,8 +67,9 @@
     });
 
     //const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents.csv'; //dev
-    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents.csv';  //prod
-
+    //const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents.csv';  //prod
+    const DATA_URL = 'data/curated/live_incidents.csv';  //prod
+    
     const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
     const COLOR_RANGE = [
       [1, 152, 189],
@@ -171,7 +171,6 @@
     		tooltip.style.left = `${x}px`;
     		tooltip.style.top = `${y}px`;
     		tooltip.innerHTML = `${object.type}${"<br />"}${object.road}${", "}${object.suburb}${"<br />"}${object.status}${"<br />Started: "}${object.loggedTime}${"<br />Id: "}${object.id}${"<br />Impacted bus routes: "}${object.ImpactedBusRoutes}${"<br />"}`;
-        //tooltip.innerHTML = `${object.status}: ${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
         } else {
     		tooltip.innerHTML = '';
     	  }
@@ -183,7 +182,6 @@
     		tooltip.style.left = `${x}px`;
     		tooltip.style.top = `${y}px`;
     		tooltip.innerHTML = `${object.type}${"<br />"}${object.road}${", "}${object.suburb}${"<br />"}${object.status}${"<br />Started: "}${object.loggedTime}${"<br />Id: "}${object.id}${"<br />Impacted bus routes: "}${object.ImpactedBusRoutes}${"<br />"}`;
-        ///tooltip.innerHTML = `${object.status}:${object.id}${"<br />"}${object.blockageType}${"<br />"}${object.classification}${"<br />"}${object.loggedTime}${"<br />"}`;
         } else {
     		tooltip.innerHTML = '';
     	  }
