@@ -145,11 +145,12 @@ def lambda_handler(event, context):
     
     startTime = time.time() #Start Time
     
-    #get incidents from S3 Bucket, only in progress.
+    #get incidents from S3 Bucket, onlly in progress.
     s3_client = boto3.client('s3')
     print("Reading input csv defining the in progress incidients from s3://"+bucketname_routes+"/"+filepath_incidents_read)
     org_incCsv = pd.read_csv(s3_client.get_object(Bucket=bucketname_routes, Key=filepath_incidents_read)['Body'])
-    incCsv = org_incCsv[['id','lat','lng','status','blockageType']]
+    #incCsv = org_incCsv[['id','lat','lng','status','blockageType']]
+    incCsv = org_incCsv[['id','lat','lng','status','type']]
     incCsv = incCsv[incCsv.status == 'In Progress']
     
     #sample data frame
@@ -164,9 +165,13 @@ def lambda_handler(event, context):
     
     #overwrite the above
     #incCsv = incCsv[incCsv.blockageType == 'Blocked']
-    org_incCsv = org_incCsv[incCsv.blockageType == 'Blocked']   #FIX THIS UP LATER!!
-    incCsv=org_incCsv
+    #org_incCsv = org_incCsv[incCsv.blockageType == 'Blocked']   #FIX THIS UP LATER!!
+    #org_incCsv = org_incCsv[incCsv.type == 'Crash']   #or Stationary Vehicle
+    #org_incCsv = org_incCsv[incCsv.type == 'Crash', 'Stationary Vehicle' ]
     
+
+    org_incCsv =org_incCsv[(incCsv['type'].str.contains('Stationary Vehicle')) | (incCsv['type'].str.contains('Crash'))]
+    incCsv=org_incCsv
     
     #refractor this for a function in combine sets
     #loop through through each incidnet and for 'HERE' affected routes.
@@ -241,7 +246,8 @@ def lambda_handler(event, context):
     
     #Program execuation time
     print("--- %s seconds ---" % (time.time() - startTime))
-        
+    
+    
     #debug
     #date = '20190419' #known holiday
     #current date
@@ -249,8 +255,9 @@ def lambda_handler(event, context):
     date = date.strftime('%Y%m%d')    
     is_a_holiday, holiday_name = current_holidays(date)  
     
+    
     #loop through through each incidnet and for 'waze' affected routes.
-    waze_alert_with_attributes =[] #take this out -no need for initialisation?
+    waze_alert_with_attributes =[]
     waze_alert_list,waze_alert_with_attributes = current_waze()  #Produce list of waze incidents in qld
     
     #waze_alert_with_attributes - gets sent out to s3
@@ -271,7 +278,8 @@ def lambda_handler(event, context):
     outbucket.upload_file("/tmp/waze.csv", filepath_incidents_WAZE_write) 
 
 
-    dfcols = ['id','lat','lng','status','blockageType','classification','loggedTime','wazeCorrelation','temp','weather','holiday']#,'weatherConditions']
+
+    dfcols = ['id','lat','lng','status','type','classification','loggedTime','wazeCorrelation','temp','weather','holiday']#,'weatherConditions']
     dfCorrelation = pd.DataFrame(columns = dfcols)
     for index, row in org_incCsv.iterrows():
         
@@ -286,7 +294,7 @@ def lambda_handler(event, context):
 
         #condition return value  - need to add attribute data of value.
         if dist_from_streams_to_waze < 100:
-            waze_proximity = "within proxity - "+dist_from_streams_to_waze
+            waze_proximity = "within proxity - "+ str(int(dist_from_streams_to_waze)) + "m"
         else:
             waze_proximity = "None"
             
@@ -295,17 +303,23 @@ def lambda_handler(event, context):
         
         #build point data result values.
         #dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
-        dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['lat']),str(row['lng']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
+        
+        dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['lat']),str(row['lng']),str(row['status']),str(row['type']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
 
+        #output
+        #print "--------------"
+        #print dfCorrelation
 
+        
     #Send out to S3
     session = boto3.Session()
     s3_client = session.client('s3')
     tmpfp=r'/tmp/combine_csv.csv' #we have 300MB of storage under /tmp
     with open(tmpfp, 'w') as h:
-        h.write('id,lat,lng,status,blockageType,classification,loggedTime,wazeCorrelation,temp,weather,holiday'+ '\n')
+        h.write('id,lat,lng,status,type,classification,loggedTime,wazeCorrelation,temp,weather,holiday'+ '\n')
         for index, row in dfCorrelation.iterrows():
-            lineCsv = str(row['id'])+','+str(row['lat'])+','+str(row['lng'])+','+str(row['status'])+','+str(row['blockageType'])+','+str(row['classification'])+','+str(row['loggedTime'])+','+str(waze_proximity)+','+str(temperature)+','+str(weather)+','+str(is_a_holiday) + '\n'    
+            lineCsv = str(row['id'])+','+str(row['lat'])+','+str(row['lng'])+','+str(row['status'])+','+str(row['type'])+','+ str(row['classification'])+','+str(row['loggedTime'])+','+str(row['wazeCorrelation'])+','+str(row['temp'])+','+str(row['weather'])+','+str(row['holiday'])+ '\n' 
+            #str(row['classification'])+','+str(row['loggedTime'])+','+str(waze_proximity)+','+str(temperature)+','+str(weather)+','+str(is_a_holiday) + '\n'    
             h.write(str(lineCsv))
     s3_client.upload_file(tmpfp,Bucket=bucketname_routes,Key=filepath_incidents_write)
                 
