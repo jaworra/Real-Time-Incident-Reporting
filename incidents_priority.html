@@ -27,7 +27,7 @@
   <body>
 
 	<div id="map"></div>
-  <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+  <div id="TMR-panel"> <a href="incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
 	<div id="tooltip"></div>
 
   </body>
@@ -40,9 +40,10 @@ deck.gl's multi-view system cannot be used.
 Unless used with react-map-gl, WebGL2 based deck.gl features, such as attribute transitions and GPU accelerated aggregation layers cannot be used
 */// https://github.com/uber/deck.gl/blob/master/docs/api-reference/mapbox/overview.md
 
-//dark map, colour lines by route, colour stops (points) similarly; e.g. http://kuanbutts.com/2018/05/25/comparing-6-18-buses/
-//width of segments by loading..
 
+/* CORS issue
+//dark map, colour lines by route, colour stops (points) similarly; e.g. http://kuanbutts.com/2018/05/25/comparing-6-18-buses/
+//width of segments by loading.
 const {MapboxLayer, ArcLayer, ScatterplotLayer} = deck;
 // Get a mapbox API access token
 mapboxgl.accessToken = '';
@@ -57,6 +58,19 @@ const map = new mapboxgl.Map({
   pitch: 40,
   bearing: 0
 });
+*/
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiamF3b3JyYSIsImEiOiJjanh6ZXBoZjQwMjlvM25wamN3eWw4aHowIn0.sfurxwTqAA9OqJr72WXjAg';
+
+const {MapboxLayer, HexagonLayer} = deck;
+const map = new mapboxgl.Map({
+  container: document.body,
+  style: 'mapbox://styles/mapbox/dark-v9',
+  center: [153.0177, -27.4],
+  zoom: 8.6, // should set the zoom extents based on the inputu coordinates.
+});
+
+
 
 var thetooltip;
 class Tooltip extends React.Component {
@@ -100,7 +114,7 @@ class Tooltip extends React.Component {
       streams_tooltip_html ="ID: "+object.id+"<br/>"
       streams_tooltip_html +="<br/>"
       streams_tooltip_html +="Logged Time: "+object.loggedTime+"<br/>"
-      streams_tooltip_html +="Status: "+object.Status+"<br/>"
+      streams_tooltip_html +="Type: "+object.type+"<br/>"
       streams_tooltip_html +="Waze Correlation: "+object.wazeCorrelation+"<br/>"
       streams_tooltip_html +="Temperature: "+object.temp+"<br/>"
       streams_tooltip_html +="Weather: "+object.weather+"<br/>"
@@ -187,12 +201,12 @@ const textlayer = new MapboxLayer({
 
 //new layer with accident
 //const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents_priorites.csv'; // Dev
-const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents_priorites.csv'; // Prod
+const DATA_URL = 'data/curated/live_incidents_priorites.csv'; // Prod
 
 const incidentlayer = new MapboxLayer({
       id: 'my-scatterplot',
       type: ScatterplotLayer,
-      data: d3.csv(DATA_URL, function(d) {if(d["status"] == "In Progress" && d["blockageType"] == "Blocked") { return d; }}),
+      data: d3.csv(DATA_URL, function(d) {if(d["status"] == "In Progress" && d["type"] == "Stationary Vehicle" || d["type"] == "Crash" ) { return d; }}),
       opacity: 0.6,
       radiusScale: 10,
       radiusMinPixels: 5,
@@ -207,7 +221,7 @@ const incidentlayer = new MapboxLayer({
       getPosition: d => [Number(d.lng), Number(d.lat)],
       getColor: d => [255, 0, 0]
   });
-
+  
 map.on('load', () => {
 
   map.addLayer(pathlayer);
