@@ -247,9 +247,7 @@ def lambda_handler(event, context):
     #Program execuation time
     print("--- %s seconds ---" % (time.time() - startTime))
     
-    
-    #debug
-    #date = '20190419' #known holiday
+    #date = '20190419' #known holiday - Debug
     #current date
     date=datetime.datetime.utcnow() + datetime.timedelta(hours=10)
     date = date.strftime('%Y%m%d')    
@@ -262,7 +260,6 @@ def lambda_handler(event, context):
     
     #waze_alert_with_attributes - gets sent out to s3
     #waze_alert_list - for correlation with streams incident
-
     #write out to S3 Bucket waze_alert_with_attributes
     with open("/tmp/waze.csv", 'w') as h:
         h.write('alert,lat,lng'+ '\n')
@@ -276,8 +273,6 @@ def lambda_handler(event, context):
     s3 = boto3.resource('s3')
     outbucket=s3.Bucket(bucketname_routes)
     outbucket.upload_file("/tmp/waze.csv", filepath_incidents_WAZE_write) 
-
-
 
     dfcols = ['id','lat','lng','status','type','classification','loggedTime','wazeCorrelation','temp','weather','holiday']#,'weatherConditions']
     dfCorrelation = pd.DataFrame(columns = dfcols)
@@ -303,12 +298,8 @@ def lambda_handler(event, context):
         
         #build point data result values.
         #dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['status']),str(row['blockageType']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
-        
         dfCorrelation.loc[len(dfCorrelation)] = [str(row['id']),str(row['lat']),str(row['lng']),str(row['status']),str(row['type']),str(row['classification']),str(row['loggedTime']),waze_proximity,temperature, weather,is_a_holiday]
 
-        #output
-        #print "--------------"
-        #print dfCorrelation
 
         
     #Send out to S3
