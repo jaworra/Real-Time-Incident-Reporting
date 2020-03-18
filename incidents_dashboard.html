@@ -1127,7 +1127,7 @@ function dsBarChart_new() {
 dsBarChart_new();
 
  /* ** UPDATE CHART ** */
- 
+
 /* updates bar chart on request */
 
 function updateBarChart_new(group, colorChosen) {
@@ -1218,7 +1218,6 @@ console.log(data);
 ############# LINE CHART ##################
 -------------------------------------------
 */
-
 
 
 //new line
@@ -1439,18 +1438,17 @@ function updateLineChart(group, colorChosen) {
 		.attr("stroke", colorChosen)
 	   ;
 	   
-	   path
+	   path  //check this!!
 	   .selectAll("title")
 	   .text(function(d) { return d.category + ": " + formatAsInteger(d.measure); })	 
 	   ;  
 
-}
+	}
 
 
 	}); //d3 csv load
 
 }); //d3 csv load
-
 
 
 /*   -- tables data

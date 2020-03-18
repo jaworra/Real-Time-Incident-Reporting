@@ -136,7 +136,6 @@ def changeCoordsStr(latLong):
 
 def lambda_handler(event, context):
     
-      
     startTime = time.time() #Start Time
     
     #get incidents from S3 Bucket, only in progress.

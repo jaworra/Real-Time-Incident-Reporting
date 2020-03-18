@@ -10,7 +10,6 @@ app_id = ''
 app_code = ''
 
 
-
 try:
     from botocore.vendored import requests
 except ImportError: #have to get it in AWS Lambda from here instead
@@ -326,16 +325,13 @@ def current_roadtek_vehicles():
     exid = exception GUID ID
 
     '''
-    
-    
+
     #Waze up session and payload to waze
     url = "https://ec2.qbitmobile.com/services/getDevices.aspx?t=612613ac-e4ae-4679-a901-10db138c5149&format=json"
     session = requests.Session()
     response = session.get(url)
     traffic_json = response.json()
     
-    
-
     print traffic_json
     return
 

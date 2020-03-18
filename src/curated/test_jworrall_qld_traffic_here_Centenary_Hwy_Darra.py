@@ -121,7 +121,6 @@ from pandas.io.json import json_normalize #take this out
 from datetime import date, timedelta
 
 
-
 def changeCoordsStr(latLong):
     """
     takes dictionary - change format from [lat,long] to [long,lat]
