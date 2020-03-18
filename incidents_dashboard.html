@@ -293,10 +293,10 @@ td {
 
 <div class="navbar">
   <a href="#" class="active">Analytics </a>
-  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_list.html"> List View </a>
-  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_map.html"> Map View</a>
-  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_priority.html"> High Priority</a>
-  <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_historic.html" class="right">Historic Visualisation</a>
+  <a href="incidents_list.html"> List View </a>
+  <a href="incidents_map.html"> Map View</a>
+  <a href="incidents_priority.html"> High Priority</a>
+  <a href="incidents_historic.html" class="right">Historic Visualisation</a>
 </div>
 
 <div class="row" margin: 2px>
@@ -347,12 +347,12 @@ var 	formatAsPercentage = d3.format("%"),
 //debug
 //Build data - Pie, Bar and Bar2 graph
 //const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv'; //dev
-const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/live_incidents_dash.csv'; //prod
+const DATA_URL = 'data/curated/live_incidents_dash.csv'; //prod
 d3.csv(DATA_URL, function(data) {
 console.log(data);
 
 	//const DATA_URL_2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //dev
-	const DATA_URL_2 = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/summarised_incidents.csv'; //prod
+	const DATA_URL_2 = 'data/curated/summarised_incidents.csv'; //prod
 	d3.csv(DATA_URL_2, function(data2) {
 		//sets variables to int or string
 		data2.forEach(function(d) {
