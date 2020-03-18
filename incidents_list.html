@@ -145,7 +145,6 @@ td { background-color: #92c5de; }
 
 tr:hover td { background-color: #edf8b1; }
 
-
 /* Responsive layout - when the screen is less than 700px wide, make the two columns stack on top of each other instead of next to each other */
 @media screen and (max-width: 700px) {
   .row {
@@ -217,7 +216,6 @@ const DATA_URL = 'data/curated/live_incidents_dash.csv';  //prod
 
 var column_names = ["ID","EVENT TYPE","LOCATION	DISTRICT","LOGGED TIME","IMPACT	BUS ROUTES AFFECTED"];
 var clicks = {ID: 0, EVENT_TYPE: 0, LOCATION_DISTRICT: 0, LOGGED_TIME: 0, IMPACT_BUS_ROUTES_AFFECTED: 0};
-
 
 
 // draw the table
@@ -444,7 +442,7 @@ headers
 	        time = time[0].split(":");
 	        var a_date_obj = new Date(+date[0],(+date[1]-1),+date[2],+time[0],+time[1],+time[2]);
           
-            date = /[\d]{4}-[\d]{2}-[\d]{2}/.exec(b.created_on);
+          date = /[\d]{4}-[\d]{2}-[\d]{2}/.exec(b.created_on);
 	        date = date[0].split("-"); 
 	        time = /[\d]{2}:[\d]{2}:[\d]{2}/.exec(b.created_on);
 	        time = time[0].split(":");
