@@ -28,25 +28,25 @@ flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, P
 │
 │
 ├── scripts 	        # contain all the JavaScript code used to 
-│			            add interactive functionality to your site
+│			            # add interactive functionality to your site
 │
 ├── styles 	       # contain the CSS code used to style your content
 │			  
 │
 ├── notebooks           # Jupyter notebooks. Naming convention is
-│                         date YYYYMMDD (for ordering),
-│                         the creator's initials, and a short `-` 
-│                         delimited description.
+│                       # date YYYYMMDD (for ordering),
+│                       # the creator's initials, and a short `-` 
+│                       # delimited description.
 │
 ├── references          # Data dictionaries, manuals, etc. 
 │
 ├── results             # Final analysis and presentaitons.
 │
 ├── requirements.txt    # The requirements file for reproducing the 
-│                         analysis environment.
+│                       # analysis environment.
 │
 ├── .gitignore          # Avoids uploading data, credentials, 
-│                         outputs, system files etc
+│                       # outputs, system files etc
 │
 │
 └── src                 # python Source code for use in this project.
@@ -59,19 +59,19 @@ flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, P
     │   └── load_data.py
     │
     ├── curated      # Scripts to transform data from raw to 
-    |   |                  curated
+    |   |            # curated
     │   └── curated_data.py
     │
     ├── processing   # Scripts to turn curated data into 
-    |   |                 modelling input
+    |   |            # modelling input
     │   └── process_modelling.py
     │
     ├── modelling   # Scripts to train models and then use 
-    |   |                  trained models to make predictions. 
+    |   |           # trained models to make predictions. 
     │   └── train_model.py
     │
     ├── model_evaluation   # Scripts that analyse model 
-    |   |                      performance and model selection.
+    |   |                  # performance and model selection.
     │   └── calculate_performance_metrics.py
     │
     ├── misc    # Scripts that qa and qc 
