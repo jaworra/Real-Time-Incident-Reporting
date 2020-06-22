@@ -49,8 +49,8 @@ flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, P
 │                       # outputs, system files etc
 │
 │
-└── src                 # python Source code for use in this project.
-    ├── __init__.py     # Makes src a Python module
+└── src                 # python Source code for use in this project. Makes src a Python module
+    ├── __init__.py     
     │
     ├── utils       # Functions used across the projecta e.g lambda layers
     │   └── remove_accents.py
@@ -58,20 +58,20 @@ flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, P
     ├── data        # Scripts to reading and writing data etc
     │   └── load_data.py
     │
-    ├── curated      # Scripts to transform data from raw to 
-    |   |            # curated
+    ├── curated      # Scripts to transform data from raw to curated
+    |   |             
     │   └── curated_data.py
     │
-    ├── processing   # Scripts to turn curated data into 
-    |   |            # modelling input
+    ├── processing   # Scripts to turn curated data into modelling input
+    |   |            
     │   └── process_modelling.py
     │
-    ├── modelling   # Scripts to train models and then use 
-    |   |           # trained models to make predictions. 
+    ├── modelling   # Scripts to train models and then use trained models to make predictions. 
+    |   |           
     │   └── train_model.py
     │
-    ├── model_evaluation   # Scripts that analyse model 
-    |   |                  # performance and model selection.
+    ├── model_evaluation   # Scripts that analyse model performance and model selection. 
+    |   |                  
     │   └── calculate_performance_metrics.py
     │
     ├── misc    # Scripts that qa and qc 
