@@ -14,7 +14,7 @@ Road incident and traffic monitoring in low latency environment for intelligent 
         <img src="images/tableau_dashboard_interface.png" height=300 />
         <img src="images/tableau_dashboard_interface_1.png" height=300 />
         <p style="text-align:center">
-        Figure 1. Route ranking (left), Quality assurances metrics (right)
+        <small>Figure 1. Route ranking (left), Quality assurances metrics (right)</small>
         </p>
   </div>
 
@@ -22,9 +22,10 @@ Road incident and traffic monitoring in low latency environment for intelligent 
 
 <p align="center">
 <img src="images/tableau_dashboard_interface_2.png" width=700 ></p><p style="text-align:center">
-Figure 2. Travel time ranking metrics
+<small>Figure 2. Travel time ranking metrics</small>
 </p>
 
+<p></p>
 <p style="text-align:left">
 <i>Inferring Incidents impacts on passenger transport</i></p><p style="text-align:left">
 Given the live feeds of bus and their schedule routes, we investigate the probability of affected
@@ -36,7 +37,7 @@ changes.
         <img src="images/dashboard_current_incidents.png" height=300 />
         <img src="images/dashboard_historic_visualisation.png" height=300 />
         <p style="text-align:center">
-        Figure 3. Incidents and possible PT effect (left), visual data analysis exploratory tool (right)
+        <small>Figure 3. Incidents and possible PT effect (left), visual data analysis exploratory tool (right)</small>
         </p>
   </div>
 
@@ -49,7 +50,7 @@ Road incident and traffic monitoring in low latency environment for intelligent 
 </p>
 <p align="center">
 <img src="images/dashbord_real_time_analytics.png" width=900></p><p style="text-align:center">
-Figure 4. Real-time incidents performance metrics
+<small>Figure 4. Real-time incidents performance metrics</small>
 </p>
 
 
@@ -144,4 +145,4 @@ glue, Athena, RDS.
 </p>
 <p align="center">
 <img src="images/architecture.png" width=800></p><p style="text-align:center">
-Figure 4. Real-time incidents performance metrics
+<small>Figure 4. Real-time incidents performance metrics</small></p>
