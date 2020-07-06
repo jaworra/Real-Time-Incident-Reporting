@@ -3,6 +3,56 @@ Real time incident reporting and passenger transport impacts application for tra
 to decrease their assessment and response time. Manage deployment on AWS platform including
 flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, Postgres) 
 
+
+The real-time road traffic monitoring system that incorporates probe data,traffic sensors and crowd sourced incident data to effectively analyse and report road network
+abnormalities, supporting improved decision making, described by [Worrall, J (2020)](docs/worrall_2020_ITS_AsiaPacific.pdf) as follows.
+
+
+
+Road incident and traffic monitoring in low latency environment for intelligent decision interfaces shown below.
+<div class="box" align="center">
+        <img src="images/tableau_dashboard_interface.png" height=400 />
+        <img src="images/tableau_dashboard_interface_1.png" height=400 />
+        <p style="text-align:center">
+        Figure 1. Route ranking (left), Quality assurances metrics (right)
+        </p>
+  </div>
+
+
+
+<p align="center">
+<img src="images/tableau_dashboard_interface_2.png" width=700 ></p><p style="text-align:center">
+Figure 2. Travel time ranking metrics
+</p>
+
+<p style="text-align:left">
+<i>Inferring Incidents impacts on passenger transport</i></p><p style="text-align:left">
+Given the live feeds of bus and their schedule routes, we investigate the probability of affected
+passenger transport services based on the condition of an incident, shown be below (figure 3,
+left). The incident and bus information are continuously monitored and updated as feed
+changes.
+</p>
+<div class="box" align="center">
+        <img src="images/dashboard_current_incidents.png" height=400 />
+        <img src="images/dashboard_historic_visualisation.png" height=400 />
+        <p style="text-align:center">
+        Figure 3. Incidents and possible PT effect (left), visual data analysis exploratory tool (right)
+        </p>
+  </div>
+
+
+<p style="text-align:left">
+<i>Inferring Incidents impacts on passenger transport</i></p><p style="text-align:left">
+With afocus of proofing the concept and ability of integrating built systems within a TMR ecosystem
+and providing lessons learnt. Below figure 4, shows the platform of event integration.
+Road incident and traffic monitoring in low latency environment for intelligent decision making
+</p>
+<p align="center">
+<img src="images/dashbord_real_time_analytics.png" width=900></p><p style="text-align:center">
+Figure 4. Real-time incidents performance metrics
+</p>
+
+
 ## Dependencies
 - Python 2.7 (AWS lambda + Jupyter Notebook)
 - Javascript (libraries deck.gl/D3/plotly and React)
@@ -84,3 +134,14 @@ flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, P
     └── visualisation    #  Scripts to create frequently used plots
         └── visualise_patient_journey.py
 ```
+
+
+
+<p style="text-align:left">
+<i>Real-time processing and storage</i></p><p style="text-align:left">
+For this application we utilised cloud computing (AWS), particularly the services lambda, S3,
+glue, Athena, RDS.
+</p>
+<p align="center">
+<img src="images/architecture.png" width=800></p><p style="text-align:center">
+Figure 4. Real-time incidents performance metrics

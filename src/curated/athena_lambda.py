@@ -1,6 +1,6 @@
 #Date:20200213
 
-#athean_qry : takes as qury and sennds to athean, retuning result
+#athean_qry : takes as qury and sends to athean, retuning result
 #todo: change functionality or wait times instead for looping retri9es
 
 import boto3
