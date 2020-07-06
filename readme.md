@@ -11,8 +11,8 @@ abnormalities, supporting improved decision making, described by [Worrall, J (20
 
 Road incident and traffic monitoring in low latency environment for intelligent decision interfaces shown below.
 <div class="box" align="center">
-        <img src="images/tableau_dashboard_interface.png" height=200 />
-        <img src="images/tableau_dashboard_interface_1.png" height=200 />
+        <img src="images/tableau_dashboard_interface.png" height=300 />
+        <img src="images/tableau_dashboard_interface_1.png" height=300 />
         <p style="text-align:center">
         Figure 1. Route ranking (left), Quality assurances metrics (right)
         </p>
@@ -33,8 +33,8 @@ left). The incident and bus information are continuously monitored and updated a
 changes.
 </p>
 <div class="box" align="center">
-        <img src="images/dashboard_current_incidents.png" height=100 />
-        <img src="images/dashboard_historic_visualisation.png" height=100 />
+        <img src="images/dashboard_current_incidents.png" height=300 />
+        <img src="images/dashboard_historic_visualisation.png" height=300 />
         <p style="text-align:center">
         Figure 3. Incidents and possible PT effect (left), visual data analysis exploratory tool (right)
         </p>
