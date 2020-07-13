@@ -346,12 +346,12 @@ var 	formatAsPercentage = d3.format("%"),
 
 //debug
 //Build data - Pie, Bar and Bar2 graph
-//const DATA_URL = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv'; //dev
+//const DATA_URL = ''; //dev
 const DATA_URL = 'data/curated/live_incidents_dash.csv'; //prod
 d3.csv(DATA_URL, function(data) {
 console.log(data);
 
-	//const DATA_URL_2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //dev
+	//const DATA_URL_2 = ''; //dev
 	const DATA_URL_2 = 'data/curated/summarised_incidents.csv'; //prod
 	d3.csv(DATA_URL_2, function(data2) {
 		//sets variables to int or string
@@ -1208,7 +1208,7 @@ function updateBarChart_new(group, colorChosen) {
 
 
 /*
-const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/summarised_incidents.csv'; //offline
+const DATA_URL2 = ''; //offline
 //const DATA_URL = 'public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/summarised_incidents.csv'; //online
 d3.csv(DATA_URL2, function(data2) {
 console.log(data);
@@ -1452,8 +1452,8 @@ function updateLineChart(group, colorChosen) {
 
 
 /*   -- tables data
-const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv'; //offline
-//const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/live_incidents_dash.csv';
+const DATA_URL2 = ''; //offline
+//const DATA_URL = '';
 
 //Table generation
           d3.text(DATA_URL2).then(function(data) {
@@ -1543,8 +1543,8 @@ const DATA_URL2 = 'https://open-test-public.s3-ap-southeast-2.amazonaws.com/live
     var rdTime = ('0000' + (rounded.getHours() * 100 + rounded.getMinutes())).slice(-4);
     var file = rdTime +'.csv'  // unload this!!!
 
-    const STAT_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/stat/'+file;
-    //const STAT_URL = 'https://road-ops-public.s3-ap-southeast-2.amazonaws.com/0800.csv';  // for offline
+    const STAT_URL = ''+file;
+    //const STAT_URL = '';  // for offline
 
     d3.csv(STAT_URL).then(function(data) {
       //console.log("Every day:",data)  // load all data

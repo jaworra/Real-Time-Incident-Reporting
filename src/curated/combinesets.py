@@ -171,7 +171,7 @@ def current_waze(): #Current waze incidents
     '''
 
     #Waze up session and payload to waze
-    url = "https://world-georss.waze.com/rtserver/web/TGeoRSS?tk=ccp_partner&ccp_partner_name=Queensland&format=JSON&types=traffic,alerts,irregularities&polygon=138.010254,-16.261152;138.032227,-26.041052;140.976563,-26.021308;140.998535,-29.040863;154.291992,-29.194429;154.006348,-22.962503;142.492676,-9.626815;140.822754,-10.924000;138.010254,-16.261152;138.010254,-16.261152"
+    url = ""
     session = requests.Session()
     response = session.get(url)
     waze_json = response.json()
@@ -205,18 +205,18 @@ def current_holidays(date): #Current waze incidents
     
     year = date[:4]
     if year == '2017':
-        resource_id = 'a24ecaf2-044a-4e66-989c-eacc81ded62f'  
+        resource_id = ''  
     elif year == '2018':
-        resource_id = '253d63c0-af1f-4f4c-b8d5-eb9d9b1d46ab'  
+        resource_id = ''  
     elif year == '2019':
-        resource_id = 'bda4d4f2-7fde-4bfc-8a23-a6eefc8cef80'  
+        resource_id = ''  
     elif year == '2020':
-        resource_id = 'c4163dc4-4f5a-4cae-b787-43ef0fcf8d8b'
+        resource_id = ''
     else:
         return "N/A - No Service" , ""
     
     #config payload
-    url = 'https://data.gov.au/data/api/3/action/datastore_search?'
+    url = ''
     url +='resource_id='+resource_id
     url += '&limit=5&q={"Date":"'+date+'", "Jurisdiction":"qld"}' 
     #url += '&fields="Holiday Name"' #restrict only field names
@@ -327,7 +327,7 @@ def current_roadtek_vehicles():
     '''
 
     #Waze up session and payload to waze
-    url = "https://ec2.qbitmobile.com/services/getDevices.aspx?t=612613ac-e4ae-4679-a901-10db138c5149&format=json"
+    url = ""
     session = requests.Session()
     response = session.get(url)
     traffic_json = response.json()

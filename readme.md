@@ -21,7 +21,7 @@ Road incident and traffic monitoring in low latency environment for intelligent 
 
 
 <p align="center">
-<img src="images/tableau_dashboard_interface_2.png" width=700 ></p><p style="text-align:center">
+<img src="images/tableau_dashboard_interface_2.png" width=500 ></p><p style="text-align:center">
 <small>Figure 2. Travel time ranking metrics</small>
 </p>
 

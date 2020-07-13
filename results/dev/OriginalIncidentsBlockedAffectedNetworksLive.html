@@ -34,7 +34,7 @@
   <body>
 
 	<div id="map"></div>
-  <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/Incidents_homepage.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+  <div id="TMR-panel"> <a href="/Incidents_homepage.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
 	<div id="tooltip"></div>
 
   </body>
@@ -226,7 +226,7 @@ const textlayer = new MapboxLayer({
 });
 
 //new layer with accident
-const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/liveIncidents.csv';
+const DATA_URL = '/liveIncidents.csv';
 const incidentlayer = new MapboxLayer({
       id: 'my-scatterplot',
       type: ScatterplotLayer,

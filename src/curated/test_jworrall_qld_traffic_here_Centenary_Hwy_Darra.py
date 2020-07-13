@@ -19,13 +19,13 @@ key_output_file_3 = r'results/hypothesis2/livelinks_streams_8484287.csv'
 key_output_file_4 = r'results/hypothesis2/livelinks_streams_average.csv'
 
 #HERE secrets
-app_id = 'Q56YtQZX205BCqVWB4UT'
-app_code = 'RkLmGtCor_WSh79Xg4egzA'
+app_id = ''
+app_code = ''
 
 #STREAM secrets & setpayload
 url ='https://api.dtmr.staging.data.streams.com.au'
 ser_SIMSRecent  = url + "/traffic/v1/link/csv"
-headers_txt = {'Content-type': 'application/csv','x-api-key': 'USoLc2B9De86v9QHy5ahcaXkXJd8Fq0a7MCwTI2V'}
+headers_txt = {'Content-type': 'application/csv','x-api-key': ''}
 
 
 import json

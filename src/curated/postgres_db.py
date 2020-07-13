@@ -849,11 +849,11 @@ from_latlon = return_from_latlon()
 #########################
 #As master user:
 ##create writer
-#execute_sql("create role writer LOGIN PASSWORD 'writer9876_asdpoi';",conn)
+#execute_sql("create role writer LOGIN PASSWORD '';",conn)
 #execute_sql("CREATE EXTENSION postgis;", conn) #enable spatial extensions for the database
 #commit(conn)
 ##create a near-readonly reader: they can create their own tables but can't edit other tables
-#execute_sql("CREATE USER reader LOGIN PASSWORD 'reader543_yuizz';",conn)
+#execute_sql("CREATE USER reader LOGIN PASSWORD '';",conn)
 #execute_sql("GRANT CONNECT ON DATABASE "+db_name+" TO reader; ",conn)
 #execute_sql("GRANT USAGE ON SCHEMA public TO reader;",conn)
 #execute_sql("GRANT SELECT ON ALL TABLES IN SCHEMA public TO reader; ",conn)

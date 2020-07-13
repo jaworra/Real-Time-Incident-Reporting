@@ -43,7 +43,7 @@
     <div><label>Coverage</label><input id="coverage" type="range" min="0" max="1" step="0.1" value="0.5"></input><span id="coverage-value"></span></div>
     <div><label>Upper Percentile</label><input id="upperPercentile" type="range" min="90" max="100" step="1" value="100"></input><span id="upperPercentile-value"></span></div>
     </div>
-    <div id="TMR-panel"> <a href="https://public-test-road.s3-ap-southeast-2.amazonaws.com/incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
+    <div id="TMR-panel"> <a href="/incidents_dashboard.html" style="color:white; text-decoration:none; dominant-baseline:central; text-anchor:left; font-size: 17px; font-family: Arial, Helvetica, sans-serif;"> TMR | Road Operations</a></div>
 	  <div id="tooltip"></div>
   </body>
 
@@ -124,7 +124,7 @@
 
 
     // Load data
-    const DATA_URL = 'https://public-test-road.s3-ap-southeast-2.amazonaws.com/data/curated/heatmap_data.csv';
+    const DATA_URL = '/data/curated/heatmap_data.csv';
 
     const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
     const COLOR_RANGE = [
