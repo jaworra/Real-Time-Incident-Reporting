@@ -72,7 +72,7 @@ Road incident and traffic monitoring in low latency environment for intelligent 
 │   ├── model_output # model output
 │   └── reporting    # Reports and input to frontend
 │
-├── docs                # Space for Sphinx documentation
+├── docs                # Presentations, architecture docs, abstract, and other related materials.
 │
 │
 ├── images	        # All the images for site	
