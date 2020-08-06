@@ -1,6 +1,10 @@
 *.jpg
 *.jpeg
 *.gif
+*.csv
 
 #work part of project that I did not contribute
 src/colins_work/*
+
+#related docs not needed
+docs/*
