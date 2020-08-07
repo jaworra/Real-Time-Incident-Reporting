@@ -5,7 +5,7 @@ flexible client engine & API integration. (Python, HTML5/JS, React/D3/Deck.gl, P
 
 
 The real-time road traffic monitoring system that incorporates probe data,traffic sensors and crowd sourced incident data to effectively analyse and report road network
-abnormalities, supporting improved decision making, described by [Worrall, J (2020)](docs/worrall_2020_ITS_AsiaPacific.pdf) as follows.
+abnormalities, supporting improved decision making, described by [Worrall, J (2020)](docs/worrall_2020_ITS_AsiaPacific.pdf) and hosted static [site](https://real-time-incident-reporting-tmr.s3-ap-southeast-2.amazonaws.com/incidents_dashboard.html).
 
 
 
